@@ -1,0 +1,35 @@
+name: Test GraalVM CI
+
+on:
+  push:
+    branches: [ main, fix-graalvm ]
+    paths:
+      - '.github/workflows/test.yml'
+  pull_request:
+    branches: [ main, fix-graalvm ]
+    paths:
+      - '.github/workflows/test.yml'
+
+concurrency:
+  group: ${{ github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_OPTS: -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true
+
+jobs:
+  test-ci:
+    name: Test CI - JDK 17 on ubuntu-latest
+    runs-on: 'ubuntu-latest'
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v3
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17.0.8'
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download Source and build Native Image
+        run: |
+          ./mvnw -PgenerateStandardMetadata -DskipNativeTests -B -T1C clean test
+          ./mvnw -am -pl distribution/proxy-native -B -T1C -Prelease.native -DskipTests clean package
