@@ -24,12 +24,12 @@ import org.apache.shardingsphere.test.natived.jdbc.commons.TestShardingService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledInNativeImage;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
+@EnabledInNativeImage
 class SeataTest {
     
     private TestShardingService testShardingService;
@@ -37,18 +37,18 @@ class SeataTest {
     /**
      * TODO Since Seata Client 1.8.0 does not provide the function of defining `service.default.grouplist` through Java API, we need to use a hard-defined host port `39567` here.
      * TODO Further processing of `/health` awaits <a href="https://github.com/apache/incubator-seata/pull/6356">apache/incubator-seata#6356</a>.
+     *
      * @throws SQLException An exception that provides information on a database access error or other errors.
      */
-    @SuppressWarnings({"resource", "deprecation"})
+    @SuppressWarnings("deprecation")
     @Test
-    @EnabledInNativeImage
     void assertShardingInSeataTransactions() throws SQLException {
         try (
-                GenericContainer<?> container = new FixedHostPortGenericContainer<>("seataio/seata-server:1.8.0")
-                        .withFixedExposedPort(39567, 8091)
-                        .withExposedPorts(7091)
-                        .waitingFor(Wait.forHttp("/health").forPort(7091).forStatusCode(HttpStatus.SC_UNAUTHORIZED))) {
-            container.start();
+                FixedHostPortGenericContainer<?> container = new FixedHostPortGenericContainer<>("seataio/seata-server:1.8.0")) {
+            container.withFixedExposedPort(39567, 8091)
+                    .withExposedPorts(7091)
+                    .waitingFor(Wait.forHttp("/health").forPort(7091).forStatusCode(HttpStatus.SC_UNAUTHORIZED))
+                    .start();
             DataSource dataSource = createDataSource();
             testShardingService = new TestShardingService(dataSource);
             initEnvironment();

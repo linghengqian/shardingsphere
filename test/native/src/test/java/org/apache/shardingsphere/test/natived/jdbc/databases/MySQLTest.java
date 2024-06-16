@@ -43,6 +43,7 @@ import static org.hamcrest.Matchers.nullValue;
  * Unable to use `org.testcontainers:mysql:1.19.3` under GraalVM Native Image.
  * Background comes from <a href="https://github.com/testcontainers/testcontainers-java/issues/7954">testcontainers/testcontainers-java#7954</a>.
  */
+@EnabledInNativeImage
 class MySQLTest {
     
     private static final String SYSTEM_PROP_KEY_PREFIX = "fixture.test-native.yaml.database.mysql.";
@@ -57,16 +58,14 @@ class MySQLTest {
     
     private TestShardingService testShardingService;
     
-    @SuppressWarnings("resource")
     @Test
-    @EnabledInNativeImage
     void assertShardingInLocalTransactions() throws SQLException {
         try (
-                GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("mysql:8.4.0-oracle"))
-                        .withEnv("MYSQL_DATABASE", DATABASE)
-                        .withEnv("MYSQL_ROOT_PASSWORD", PASSWORD)
-                        .withExposedPorts(3306)) {
-            container.start();
+                GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("mysql:8.4.0-oracle"))) {
+            container.withEnv("MYSQL_DATABASE", DATABASE)
+                    .withEnv("MYSQL_ROOT_PASSWORD", PASSWORD)
+                    .withExposedPorts(3306)
+                    .start();
             jdbcUrlPrefix = "jdbc:mysql://localhost:" + container.getMappedPort(3306) + "/";
             DataSource dataSource = createDataSource();
             testShardingService = new TestShardingService(dataSource);

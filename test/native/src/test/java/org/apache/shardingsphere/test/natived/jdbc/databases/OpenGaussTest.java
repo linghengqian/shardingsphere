@@ -38,6 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
+@EnabledInNativeImage
 class OpenGaussTest {
     
     private static final String SYSTEM_PROP_KEY_PREFIX = "fixture.test-native.yaml.database.opengauss.";
@@ -52,15 +53,13 @@ class OpenGaussTest {
     
     private TestShardingService testShardingService;
     
-    @SuppressWarnings("resource")
     @Test
-    @EnabledInNativeImage
     void assertShardingInLocalTransactions() throws SQLException {
         try (
-                GenericContainer<?> openGaussContainer = new GenericContainer<>(DockerImageName.parse("opengauss/opengauss:5.0.0"))
-                        .withEnv("GS_PASSWORD", PASSWORD)
-                        .withExposedPorts(5432)) {
-            openGaussContainer.start();
+                GenericContainer<?> openGaussContainer = new GenericContainer<>(DockerImageName.parse("opengauss/opengauss:5.0.0"))) {
+            openGaussContainer.withEnv("GS_PASSWORD", PASSWORD)
+                    .withExposedPorts(5432)
+                    .start();
             jdbcUrlPrefix = "jdbc:opengauss://localhost:" + openGaussContainer.getMappedPort(5432) + "/";
             DataSource dataSource = createDataSource();
             testShardingService = new TestShardingService(dataSource);

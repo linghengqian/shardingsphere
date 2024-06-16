@@ -36,6 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
+@EnabledInNativeImage
 class EtcdTest {
     
     private static final String SYSTEM_PROP_KEY_PREFIX = "fixture.test-native.yaml.mode.cluster.etcd.";
@@ -50,7 +51,6 @@ class EtcdTest {
      * @see org.apache.shardingsphere.mode.repository.cluster.etcd.EtcdRepository
      */
     @Test
-    @EnabledInNativeImage
     void assertShardingInLocalTransactions() throws SQLException {
         try (
                 EtcdCluster etcd = Etcd.builder()

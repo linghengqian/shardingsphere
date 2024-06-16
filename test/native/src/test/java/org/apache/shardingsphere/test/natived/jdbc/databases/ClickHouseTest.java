@@ -26,6 +26,7 @@ import org.junit.jupiter.api.condition.EnabledInNativeImage;
 import javax.sql.DataSource;
 import java.sql.SQLException;
 
+@EnabledInNativeImage
 class ClickHouseTest {
     
     private TestShardingService testShardingService;
@@ -36,7 +37,7 @@ class ClickHouseTest {
      *
      * @throws SQLException An exception that provides information on a database access error or other errors.
      */
-    @EnabledInNativeImage
+    
     @Test
     void assertShardingInLocalTransactions() throws SQLException {
         HikariConfig config = new HikariConfig();
