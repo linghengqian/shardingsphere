@@ -90,6 +90,25 @@ public final class AddressRepository {
     }
     
     /**
+     * create table if not exists in Presto Memory Connector.
+     * Presto Memory Connector does not support non-null column for column name.
+     * Presto Memory Connector does not support Primary Key constraints.
+     *
+     * @throws SQLException SQL exception
+     */
+    public void createTableIfNotExistsInPresto() throws SQLException {
+        String sql = "CREATE TABLE IF NOT EXISTS memory.logic_db.t_address (\n"
+                + "    address_id BIGINT, \n"
+                + "    address_name VARCHAR(100)\n"
+                + ");";
+        try (
+                Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sql);
+        }
+    }
+    
+    /**
      * drop table t_address.
      *
      * @throws SQLException SQL exception

@@ -146,6 +146,29 @@ public final class OrderRepository {
     }
     
     /**
+     * create table if not exists in Presto Memory Connector.
+     * Presto Memory Connector does not support AUTO_INCREMENT columns.
+     * Presto Memory Connector does not support non-null column for column name.
+     * Presto Memory Connector does not support Primary Key constraints.
+     *
+     * @throws SQLException SQL exception
+     */
+    public void createTableIfNotExistsInPresto() throws SQLException {
+        String sql = "CREATE TABLE memory.logic_db.t_order (\n"
+                + "  order_id BIGINT,\n"
+                + "  order_type INTEGER,\n"
+                + "  user_id INTEGER,\n"
+                + "  address_id BIGINT,\n"
+                + "  status VARCHAR(50)\n"
+                + ");";
+        try (
+                Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sql);
+        }
+    }
+    
+    /**
      * drop table.
      * TODO There is a bug in this function in shadow's unit test and requires additional fixes.
      *
