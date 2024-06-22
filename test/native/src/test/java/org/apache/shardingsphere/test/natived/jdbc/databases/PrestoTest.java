@@ -20,11 +20,11 @@ package org.apache.shardingsphere.test.natived.jdbc.databases;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.shardingsphere.test.natived.jdbc.commons.TestShardingService;
-import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledInNativeImage;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.utility.MountableFile;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -32,33 +32,37 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.Properties;
+import java.time.temporal.ChronoUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
-class OpenGaussTest {
+/**
+ * Unable to use `org.testcontainers:presto:1.19.8` under GraalVM Native Image.
+ * Background comes from <a href="https://github.com/testcontainers/testcontainers-java/issues/8657">testcontainers/testcontainers-java#8657</a>.
+ */
+public class PrestoTest {
     
-    private static final String SYSTEM_PROP_KEY_PREFIX = "fixture.test-native.yaml.database.opengauss.";
+    private static final String SYSTEM_PROP_KEY_PREFIX = "fixture.test-native.yaml.database.presto.";
     
-    private static final String USERNAME = "gaussdb";
-    
-    private static final String PASSWORD = "openGauss@123";
-    
-    private static final String DATABASE = "postgres";
-    
-    private String jdbcUrlPrefix;
+    private String baseJdbcUrl;
     
     private TestShardingService testShardingService;
     
     @Test
-    @EnabledInNativeImage
+    // @EnabledInNativeImage
     void assertShardingInLocalTransactions() throws SQLException {
         try (
-                GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("opengauss/opengauss:5.0.0"))) {
-            container.withEnv("GS_PASSWORD", PASSWORD).withExposedPorts(5432).start();
-            jdbcUrlPrefix = "jdbc:opengauss://localhost:" + container.getMappedPort(5432) + "/";
+                GenericContainer<?> container = new GenericContainer<>(DockerImageName.parse("prestodb/presto:0.287"))) {
+            container.withExposedPorts(8080)
+                    .withCopyFileToContainer(
+                            MountableFile.forClasspathResource("/test-native/properties/presto-catalog-memory.properties"),
+                            "/opt/presto-server/etc/catalog/memory.properties")
+                    .waitingFor(new LogMessageWaitStrategy().withRegEx(".*======== SERVER STARTED ========.*")
+                            .withStartupTimeout(Duration.of(60, ChronoUnit.SECONDS)))
+                    .start();
+            baseJdbcUrl = "jdbc:presto://localhost:" + container.getMappedPort(8080) + "/memory";
             DataSource dataSource = createDataSource();
             testShardingService = new TestShardingService(dataSource);
             initEnvironment();
@@ -76,36 +80,25 @@ class OpenGaussTest {
         testShardingService.getAddressRepository().truncateTable();
     }
     
-    private Connection openConnection() throws SQLException {
-        Properties props = new Properties();
-        props.setProperty("user", USERNAME);
-        props.setProperty("password", PASSWORD);
-        return DriverManager.getConnection(jdbcUrlPrefix + DATABASE, props);
-    }
-    
     @SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection"})
     private DataSource createDataSource() throws SQLException {
-        Awaitility.await().atMost(Duration.ofMinutes(1L)).ignoreExceptions().until(() -> {
-            openConnection().close();
-            return true;
-        });
         try (
-                Connection connection = openConnection();
+                Connection connection = DriverManager.getConnection(baseJdbcUrl, "test", null);
                 Statement statement = connection.createStatement()) {
-            statement.executeUpdate("CREATE DATABASE demo_ds_0");
-            statement.executeUpdate("CREATE DATABASE demo_ds_1");
-            statement.executeUpdate("CREATE DATABASE demo_ds_2");
+            statement.executeUpdate("CREATE SCHEMA memory.demo_ds_0");
+            statement.executeUpdate("CREATE SCHEMA memory.demo_ds_1");
+            statement.executeUpdate("CREATE SCHEMA memory.demo_ds_2");
         }
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
-        config.setJdbcUrl("jdbc:shardingsphere:classpath:test-native/yaml/databases/opengauss.yaml?placeholder-type=system_props");
+        config.setJdbcUrl("jdbc:shardingsphere:classpath:test-native/yaml/databases/presto.yaml?placeholder-type=system_props");
         try {
             assertThat(System.getProperty(SYSTEM_PROP_KEY_PREFIX + "ds0.jdbc-url"), is(nullValue()));
             assertThat(System.getProperty(SYSTEM_PROP_KEY_PREFIX + "ds1.jdbc-url"), is(nullValue()));
             assertThat(System.getProperty(SYSTEM_PROP_KEY_PREFIX + "ds2.jdbc-url"), is(nullValue()));
-            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds0.jdbc-url", jdbcUrlPrefix + "demo_ds_0");
-            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds1.jdbc-url", jdbcUrlPrefix + "demo_ds_1");
-            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds2.jdbc-url", jdbcUrlPrefix + "demo_ds_2");
+            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds0.jdbc-url", baseJdbcUrl + "/demo_ds_0");
+            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds1.jdbc-url", baseJdbcUrl + "/demo_ds_1");
+            System.setProperty(SYSTEM_PROP_KEY_PREFIX + "ds2.jdbc-url", baseJdbcUrl + "/demo_ds_2");
             return new HikariDataSource(config);
         } finally {
             System.clearProperty(SYSTEM_PROP_KEY_PREFIX + "ds0.jdbc-url");
