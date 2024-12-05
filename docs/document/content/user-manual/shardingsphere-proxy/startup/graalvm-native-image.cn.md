@@ -149,22 +149,27 @@ services:
       - "3307:3307"
 ```
 
+## 使用限制
+
+### 构建静态链接的 GraalVM Native Image 
+
 如果用户不对 Git Source 做任何更改，
-上文提及的命令将使用 https://yum.oracle.com/oracle-linux-downloads.html 中的 `container-registry.oracle.com/os/oraclelinux:9-slim` 作为 Base Docker Image。
-但如果用户希望使用 `scratch`，`alpine:3`，`gcr.io/distroless/base-debian12`，
-`gcr.io/distroless/java-base-debian12` 或 `gcr.io/distroless/static-debian12` 等更小体积的 Docker Image 作为 Base Docker Image，
+上文提及的命令将使用 `gcr.io/distroless/java-base-debian12:latest` 作为 Base Docker Image。
+
+但如果用户希望使用 `scratch`，`alpine:3`，`gcr.io/distroless/base-debian12`
+或 `gcr.io/distroless/static-debian12` 等更小体积的 Docker Image 作为 Base Docker Image，
 用户可能需要根据 https://www.graalvm.org/jdk23/reference-manual/native-image/guides/build-static-executables/ 的要求，
 做为 `pom.xml`的 `Maven Profile` 添加 `--static`，`--libc=musl` 或 `--static-nolibc` 的 `buildArgs` 等操作。
 
-构建静态链接的 GraalVM Native Image 需要更多系统依赖，且目前不支持为 Linux（aarch64）等环境构建静态链接的 GraalVM Native Image。
+构建静态链接的 GraalVM Native Image 需要更多系统依赖，且目前仅支持为 Linux（amd64）环境构建静态链接的 GraalVM Native Image。
 完全静态链接的 GraalVM Native Image 采用的是 musl libc。
 大多数 Linux 系统内置的 musl 已过时，比如 Ubuntu 22.04.5 LTS 使用的 [musl (1.2.2-4) unstable](https://packages.ubuntu.com/jammy/musl)。
-用户总是需要从源代码构建和安装新版本的 musl。
+用户总是需要从源代码构建和安装新版本的 musl。更合理的操作是在 Docker Container 内执行构建流程。
 
 另请注意，某些第三方 Maven 依赖将需要在 `Dockerfile` 安装更多系统库，
 因此请确保根据使用情况调整 `distribution/proxy-native` 下的 `pom.xml` 和 `Dockerfile` 的内容。
 
-## 可观察性
+### 可观察性
 
 针对 GraalVM Native Image 形态的 ShardingSphere Proxy，其提供的可观察性的能力与[可观察性](/cn/user-manual/shardingsphere-proxy/observability)并不一致。
 
@@ -178,3 +183,32 @@ services:
 用户需要关注尚未关闭的 https://github.com/oracle/graal/issues/8177 。
 
 若用户期望在 ShardingSphere Proxy Native 下使用这类 Java Agent，则需要关注 https://github.com/oracle/graal/pull/8077 涉及的变动。
+
+## Seata AT 模式集成
+
+对于 GraalVM Native Image 形态的 ShardingSphere Proxy Native，
+用户始终需要修改 ShardingSphere 源代码以添加 Seata Client 和 Seata 集成的 Maven 模块，并编译为 GraalVM Native Image。
+GraalVM Native Image 形态的 ShardingSphere Proxy Native 无法识别额外添加的 JAR 文件。
+
+```xml
+<project>
+    <dependencies>
+      <dependency>
+         <groupId>org.apache.shardingsphere</groupId>
+         <artifactId>shardingsphere-transaction-base-seata-at</artifactId>
+         <version>${shardingsphere.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.seata</groupId>
+         <artifactId>seata-all</artifactId>
+         <version>2.2.0</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.antlr</groupId>
+               <artifactId>antlr4-runtime</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+    </dependencies>
+</project>
+```

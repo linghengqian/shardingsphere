@@ -153,23 +153,30 @@ services:
       - "3307:3307"
 ```
 
-If the user does not make any changes to the Git Source,
-the above mentioned command will use `container-registry.oracle.com/os/oraclelinux:9-slim` in https://yum.oracle.com/oracle-linux-downloads.html as the Base Docker Image.
-But if the user wants to use a smaller Docker Image such as `scratch`, `alpine:3`, `gcr.io/distroless/base-debian12`,
-`gcr.io/distroless/java-base-debian12` or `gcr.io/distroless/static-debian12` as the Base Docker Image,
-the user may need to add `--static`,
-`--libc=musl` or `--static-nolibc` to the `Maven Profile` of `pom.xml` as required by https://www.graalvm.org/jdk23/reference-manual/native-image/guides/build-static-executables/ and other operations such as `buildArgs`.
+## Usage Restrictions
 
-Building a statically linked GraalVM Native Image requires more system dependencies,
-and currently does not support building statically linked GraalVM Native Images for environments such as Linux (aarch64).
+### Build a statically linked GraalVM Native Image
+
+If the user does not make any changes to Git Source,
+the above mentioned command will use `gcr.io/distroless/java-base-debian12:latest` as the Base Docker Image.
+
+But if users want to use smaller Docker Images such as `scratch`, `alpine:3`, `gcr.io/distroless/base-debian12`
+or `gcr.io/distroless/static-debian12` as Base Docker Image,
+users may need to add `--static`, `--libc=musl` or `--static-nolibc` to `buildArgs` of `Maven Profile` of `pom.xml`
+according to the requirements of https://www.graalvm.org/jdk23/reference-manual/native-image/guides/build-static-executables/, 
+and other operations.
+
+Building a statically linked GraalVM Native Image requires more system dependencies, 
+and currently only supports building a statically linked GraalVM Native Image for Linux (amd64) environment.
 Fully statically linked GraalVM Native Images use musl libc.
 Most Linux systems come with outdated musl, such as Ubuntu 22.04.5 LTS which uses [musl (1.2.2-4) unstable](https://packages.ubuntu.com/jammy/musl).
 Users always need to build and install a new version of musl from source.
+A more reasonable operation is to execute the build process in the Docker Container.
 
 Also note that some third-party Maven dependencies will require more system libraries to be installed in the `Dockerfile`,
 so make sure to adjust the contents of `pom.xml` and `Dockerfile` under `distribution/proxy-native` according to your usage.
 
-## Observability
+### Observability
 
 The observability provided by ShardingSphere Proxy in the form of GraalVM Native Image is not consistent with [observability](/cn/user-manual/shardingsphere-proxy/observability).
 
@@ -185,3 +192,32 @@ For Java Agents such as `ShardingSphere Agent`, the `native-image` component of 
 Users need to pay attention to https://github.com/oracle/graal/issues/8177 which has not been closed.
 
 If users expect to use such Java Agents under ShardingSphere Proxy Native, they need to pay attention to the changes involved in https://github.com/oracle/graal/pull/8077 .
+
+## Seata AT mode integration
+
+For ShardingSphere Proxy Native in GraalVM Native Image,
+Users always need to modify the ShardingSphere source code to add the Seata Client and Seata integrated Maven modules and compile them into GraalVM Native Image.
+ShardingSphere Proxy Native in GraalVM Native Image cannot recognize the additional JAR files.
+
+```xml
+<project>
+    <dependencies>
+      <dependency>
+         <groupId>org.apache.shardingsphere</groupId>
+         <artifactId>shardingsphere-transaction-base-seata-at</artifactId>
+         <version>${shardingsphere.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.seata</groupId>
+         <artifactId>seata-all</artifactId>
+         <version>2.2.0</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.antlr</groupId>
+               <artifactId>antlr4-runtime</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+    </dependencies>
+</project>
+```

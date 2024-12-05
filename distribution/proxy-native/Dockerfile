@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM container-registry.oracle.com/os/oraclelinux:9-slim
+FROM gcr.io/distroless/java-base-debian12:latest
 LABEL org.opencontainers.image.authors="ShardingSphere dev@shardingsphere.apache.org"
 ENV LOCAL_PATH=/opt/shardingsphere-proxy-native-bin
 ARG OUTPUT_DIRECTORY_NAME
