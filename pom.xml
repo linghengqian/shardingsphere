@@ -154,7 +154,7 @@
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
         <dockerfile-maven.version>1.4.13</dockerfile-maven.version>
         <os-detector-maven-plugin.version>0.3.1</os-detector-maven-plugin.version>
-        <native-maven-plugin.version>0.10.3</native-maven-plugin.version>
+        <native-maven-plugin.version>0.10.4</native-maven-plugin.version>
         
         <!-- Compile plugin versions -->
         <templating-maven-plugin.version>1.0.0</templating-maven-plugin.version>
@@ -1064,14 +1064,13 @@
                                         <conditional>
                                             <userCodeFilterPath>${user.dir}/test/native/native-image-filter/user-code-filter.json</userCodeFilterPath>
                                             <extraFilterPath>${user.dir}/test/native/native-image-filter/extra-filter.json</extraFilterPath>
-                                            <parallel>true</parallel>
                                         </conditional>
                                     </modes>
                                     <metadataCopy>
                                         <disabledStages>
                                             <stage>main</stage>
                                         </disabledStages>
-                                        <merge>false</merge>
+                                        <merge>true</merge>
                                         <outputDirectory>${user.dir}/infra/reachability-metadata/src/main/resources/META-INF/native-image/org.apache.shardingsphere/generated-reachability-metadata/</outputDirectory>
                                     </metadataCopy>
                                 </agent>
