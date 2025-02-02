@@ -124,9 +124,6 @@
     "condition":{"typeReachable":"org.apache.shardingsphere.db.protocol.mysql.constant.MySQLCharacterSet"},
     "pattern":"\\QMETA-INF/services/java.nio.charset.spi.CharsetProvider\\E"
   }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\QMETA-INF/services/java.nio.charset.spi.CharsetProvider\\E"
-  }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.proxy.backend.postgresql.handler.admin.executor.variable.charset.PostgreSQLCharacterSets"},
     "pattern":"\\QMETA-INF/services/java.nio.charset.spi.CharsetProvider\\E"
   }, {
@@ -136,17 +133,11 @@
     "condition":{"typeReachable":"org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource"},
     "pattern":"\\QMETA-INF/services/javax.xml.datatype.DatatypeFactory\\E"
   }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\QMETA-INF/services/javax.xml.parsers.DocumentBuilderFactory\\E"
-  }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.mode.repository.standalone.jdbc.sql.JDBCRepositorySQLLoader"},
     "pattern":"\\QMETA-INF/services/javax.xml.stream.XMLInputFactory\\E"
   }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.mode.repository.standalone.jdbc.sql.JDBCRepositorySQLLoader"},
     "pattern":"\\QMETA-INF/services/javax.xml.stream.XMLOutputFactory\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\QMETA-INF/services/javax.xml.transform.TransformerFactory\\E"
   }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.proxy.initializer.BootstrapInitializer"},
     "pattern":"\\QMETA-INF/services/org.apache.seata.config.ConfigurationProvider\\E"
@@ -418,38 +409,11 @@
     "condition":{"typeReachable":"org.apache.shardingsphere.driver.jdbc.core.datasource.ShardingSphereDataSource"},
     "pattern":"\\Qcontainer-license-acceptance.txt\\E"
   }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qcore-default.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qcore-site.xml\\E"
-  }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.infra.autogen.version.ShardingSphereVersion"},
     "pattern":"\\Qcurrent-git-commit.properties\\E"
   }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qhive-default.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qhive-site.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qhivemetastore-site.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qhiveserver2-site.xml\\E"
-  }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.transaction.xa.atomikos.manager.AtomikosTransactionManagerProvider"},
     "pattern":"\\Qjta.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qmapred-default.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qmapred-site.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qorg/apache/hadoop/hive/conf/HiveConf.class\\E"
   }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.proxy.initializer.BootstrapInitializer"},
     "pattern":"\\Qorg/h2/util/data.zip\\E"
@@ -2088,36 +2052,9 @@
   }, {
     "condition":{"typeReachable":"org.apache.shardingsphere.mode.repository.cluster.etcd.EtcdRepository"},
     "pattern":"\\Qvertx-default-jul-logging.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qyarn-default.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"\\Qyarn-site.xml\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/Encodings.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/XMLEntities.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/XMLEntities_zh.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/XMLEntities_zh_CN.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/XMLEntities_zh_Hans.properties\\E"
-  }, {
-    "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-    "pattern":"java.xml:\\Qcom/sun/org/apache/xml/internal/serializer/XMLEntities_zh_Hans_CN.properties\\E"
   }]},
   "bundles":[{
     "name":"com.microsoft.sqlserver.jdbc.SQLServerResource",
-    "locales":["zh-CN"]
-  }, {
-    "name":"com.sun.org.apache.xml.internal.serializer.XMLEntities",
     "locales":["zh-CN"]
   }]
 }

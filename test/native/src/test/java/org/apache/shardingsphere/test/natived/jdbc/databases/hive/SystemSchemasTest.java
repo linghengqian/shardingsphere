@@ -28,20 +28,22 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.Container.ExecResult;
 import org.junit.jupiter.api.condition.EnabledInNativeImage;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.Properties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -50,23 +52,30 @@ import static org.hamcrest.Matchers.nullValue;
 @SuppressWarnings({"SqlDialectInspection", "SqlNoDataSourceInspection", "resource"})
 @EnabledInNativeImage
 @Testcontainers
-class StandaloneMetastoreTest {
+class SystemSchemasTest {
     
     private final Network network = Network.newNetwork();
     
     @Container
-    private final GenericContainer<?> hmsContainer = new GenericContainer<>("apache/hive:4.0.1")
-            .withEnv("SERVICE_NAME", "metastore")
+    private final GenericContainer<?> postgres = new GenericContainer<>("postgres:17.2-bookworm")
+            .withEnv("POSTGRES_PASSWORD", "example")
             .withNetwork(network)
-            .withNetworkAliases("metastore");
+            .withNetworkAliases("some-postgres");
     
     @Container
-    private final GenericContainer<?> hs2Container = new GenericContainer<>("apache/hive:4.0.1")
-            .withEnv("SERVICE_NAME", "hiveserver2")
-            .withEnv("SERVICE_OPTS", "-Dhive.metastore.uris=thrift://metastore:9083")
-            .withNetwork(network)
-            .withExposedPorts(10000)
-            .dependsOn(hmsContainer);
+    private final GenericContainer<?> hs2 = new GenericContainer<>(
+            new ImageFromDockerfile().withFileFromPath(
+                    "Dockerfile",
+                    Paths.get("src/test/resources/test-native/dockerfile/Dockerfile-hive-server2").toAbsolutePath()))
+                            .withEnv("SERVICE_NAME", "hiveserver2")
+                            .withEnv("DB_DRIVER", "postgres")
+                            .withEnv("SERVICE_OPTS", "-Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver" + " "
+                                    + "-Djavax.jdo.option.ConnectionURL=jdbc:postgresql://some-postgres:5432/postgres" + " "
+                                    + "-Djavax.jdo.option.ConnectionUserName=postgres" + " "
+                                    + "-Djavax.jdo.option.ConnectionPassword=example")
+                            .withNetwork(network)
+                            .withExposedPorts(10000)
+                            .dependsOn(postgres);
     
     private final String systemPropKeyPrefix = "fixture.test-native.yaml.database.hive.hms.";
     
@@ -100,25 +109,33 @@ class StandaloneMetastoreTest {
     }
     
     @Test
-    void assertShardingInLocalTransactions() throws SQLException {
-        jdbcUrlPrefix = "jdbc:hive2://localhost:" + hs2Container.getMappedPort(10000) + "/";
+    void assertShardingInLocalTransactions() throws SQLException, IOException, InterruptedException {
+        ExecResult initResult = hs2.execInContainer(
+                "/opt/hive/bin/schematool",
+                "-initSchema",
+                "-dbType", "hive",
+                "-metaDbType", "postgres",
+                "-url", "jdbc:hive2://localhost:10000/default");
+        assertThat(initResult.getStdout(), is("Initializing the schema to: 4.0.0\n" +
+                "Metastore connection URL:\t jdbc:hive2://localhost:10000/default\n" +
+                "Metastore connection Driver :\t org.apache.hive.jdbc.HiveDriver\n" +
+                "Metastore connection User:\t APP\n" +
+                "Starting metastore schema initialization to 4.0.0\n" +
+                "Initialization script hive-schema-4.0.0.hive.sql\n" +
+                "Initialization script completed\n"));
+        jdbcUrlPrefix = "jdbc:hive2://localhost:" + hs2.getMappedPort(10000) + "/";
         logicDataSource = createDataSource();
         TestShardingService testShardingService = new TestShardingService(logicDataSource);
         testShardingService.processSuccessInHive();
     }
     
-    private Connection openConnection() throws SQLException {
-        Properties props = new Properties();
-        return DriverManager.getConnection(jdbcUrlPrefix, props);
-    }
-    
     private DataSource createDataSource() throws SQLException {
         Awaitility.await().atMost(Duration.ofMinutes(1L)).ignoreExceptions().until(() -> {
-            openConnection().close();
+            DriverManager.getConnection(jdbcUrlPrefix).close();
             return true;
         });
         try (
-                Connection connection = openConnection();
+                Connection connection = DriverManager.getConnection(jdbcUrlPrefix);
                 Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE DATABASE demo_ds_0");
             statement.executeUpdate("CREATE DATABASE demo_ds_1");

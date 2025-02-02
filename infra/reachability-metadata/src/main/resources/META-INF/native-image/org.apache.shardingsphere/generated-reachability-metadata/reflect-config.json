@@ -28,7 +28,7 @@
   "name":"[Lcom.github.dockerjava.api.model.VolumesFrom;"
 },
 {
-  "condition":{"typeReachable":"org.apache.shardingsphere.driver.jdbc.core.connection.DriverDatabaseConnectionManager$$Lambda/0x00007f1973df8240"},
+  "condition":{"typeReachable":"org.apache.shardingsphere.driver.jdbc.core.connection.DriverDatabaseConnectionManager$$Lambda/0x00007f9d7bdf8630"},
   "name":"[Lcom.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry;"
 },
 {
@@ -36,7 +36,7 @@
   "name":"[Lcom.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry;"
 },
 {
-  "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.core.metadata.data.loader.MetaDataLoader"},
+  "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.core.metadata.data.loader.type.TableMetaDataLoader"},
   "name":"[Lcom.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry;"
 },
 {
@@ -122,10 +122,6 @@
 {
   "condition":{"typeReachable":"org.apache.shardingsphere.transaction.base.seata.at.SeataATShardingSphereTransactionManager"},
   "name":"[Ljava.sql.Statement;"
-},
-{
-  "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-  "name":"com.sun.security.auth.UnixPrincipal"
 },
 {
   "condition":{"typeReachable":"org.apache.shardingsphere.proxy.backend.connector.StandardDatabaseConnector"},
@@ -320,12 +316,6 @@
   "condition":{"typeReachable":"org.apache.shardingsphere.infra.algorithm.core.processor.AlgorithmChangedProcessor"},
   "name":"java.lang.Object",
   "allDeclaredFields":true
-},
-{
-  "condition":{"typeReachable":"org.apache.shardingsphere.infra.database.hive.metadata.data.loader.HiveMetaDataLoader"},
-  "name":"java.lang.Object",
-  "allDeclaredFields":true,
-  "queryAllDeclaredMethods":true
 },
 {
   "condition":{"typeReachable":"org.apache.shardingsphere.infra.expr.groovy.GroovyInlineExpressionParser"},
