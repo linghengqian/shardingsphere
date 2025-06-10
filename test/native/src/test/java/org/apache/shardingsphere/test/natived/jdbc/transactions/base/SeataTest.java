@@ -20,10 +20,6 @@ package org.apache.shardingsphere.test.natived.jdbc.transactions.base;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.hc.core5.http.HttpStatus;
-import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
-import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
-import org.apache.shardingsphere.infra.metadata.database.resource.unit.StorageUnit;
-import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.test.natived.commons.TestShardingService;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -37,7 +33,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
@@ -60,8 +55,6 @@ class SeataTest {
     
     private final String serviceDefaultGroupListKey = "service.default.grouplist";
     
-    private DataSource logicDataSource;
-    
     private TestShardingService testShardingService;
     
     @BeforeEach
@@ -72,25 +65,17 @@ class SeataTest {
     /**
      * TODO Apparently there is a real connection leak on Seata Client 2.3.0.
      *
-     * @throws SQLException SQL exception
      */
     @AfterEach
-    void afterEach() throws SQLException {
+    void afterEach() {
         Awaitility.await().pollDelay(5L, TimeUnit.SECONDS).until(() -> true);
         System.clearProperty(serviceDefaultGroupListKey);
-        try (Connection connection = logicDataSource.getConnection()) {
-            ContextManager contextManager = connection.unwrap(ShardingSphereConnection.class).getContextManager();
-            for (StorageUnit each : contextManager.getStorageUnits(DefaultDatabase.LOGIC_NAME).values()) {
-                each.getDataSource().unwrap(HikariDataSource.class).close();
-            }
-            contextManager.close();
-        }
         ContainerDatabaseDriver.killContainers();
     }
     
     @Test
     void assertShardingInSeataTransactions() throws SQLException {
-        logicDataSource = createDataSource(container.getMappedPort(8091));
+        DataSource logicDataSource = createDataSource(container.getMappedPort(8091));
         testShardingService = new TestShardingService(logicDataSource);
         initEnvironment();
         testShardingService.processSuccess();

@@ -1,0 +1,59 @@
+name: NativeTest CI - GraalVM Native Image
+
+on:
+  push:
+    branches: [ rethread ]
+  workflow_dispatch:
+  
+concurrency:
+  group: graalvm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nativetest:
+    name: GraalVM - GraalVM CE for JDK ${{ matrix.java-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'windows-latest' ]
+        java-version: [ '22.0.2' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup WSL 2 and Ubuntu Linux distribution
+        uses: Vampire/setup-wsl@v5
+        if: matrix.os == 'windows-latest'
+        with:
+          distribution: 'Ubuntu-24.04'
+          use-cache: 'true'
+      - name: Setup Docker daemon on Linux distribution on WSL without GUI
+        if: matrix.os == 'windows-latest'
+        shell: wsl-bash {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get remove docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc
+          sudo apt-get install ca-certificates curl -y
+          sudo install -m 0755 -d /etc/apt/keyrings
+          sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          sudo chmod a+r /etc/apt/keyrings/docker.asc
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+          sudo sed -i 's|-H fd://|-H fd:// -H tcp://127.0.0.1:12375|' /usr/lib/systemd/system/docker.service
+          sudo systemctl daemon-reload
+          sudo systemctl restart docker.service
+      - name: Test Docker CLI on Windows Server without GUI
+        if: matrix.os == 'windows-latest'
+        env:
+          DOCKER_HOST: tcp://127.0.0.1:12375
+        run: docker run hello-world:linux
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+          native-image-job-reports: 'true'
+      - name: Run test with GraalVM CE for ${{ matrix.java-version }}
+        if: matrix.os == 'ubuntu-latest'
+        run: ./mvnw -PgenerateMetadata -e -T 1C clean test
