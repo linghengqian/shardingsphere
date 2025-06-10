@@ -20,10 +20,6 @@ package org.apache.shardingsphere.test.natived.jdbc.databases;
 import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
-import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
-import org.apache.shardingsphere.infra.metadata.database.resource.unit.StorageUnit;
-import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.test.natived.commons.TestShardingService;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -64,8 +60,6 @@ class MySQLTest {
             .withEnv("MYSQL_ROOT_PASSWORD", password)
             .withExposedPorts(3306);
     
-    private DataSource logicDataSource;
-    
     private String jdbcUrlPrefix;
     
     private TestShardingService testShardingService;
@@ -78,14 +72,7 @@ class MySQLTest {
     }
     
     @AfterEach
-    void afterEach() throws SQLException {
-        try (Connection connection = logicDataSource.getConnection()) {
-            ContextManager contextManager = connection.unwrap(ShardingSphereConnection.class).getContextManager();
-            for (StorageUnit each : contextManager.getStorageUnits(DefaultDatabase.LOGIC_NAME).values()) {
-                each.getDataSource().unwrap(HikariDataSource.class).close();
-            }
-            contextManager.close();
-        }
+    void afterEach() {
         System.clearProperty(systemPropKeyPrefix + "ds0.jdbc-url");
         System.clearProperty(systemPropKeyPrefix + "ds1.jdbc-url");
         System.clearProperty(systemPropKeyPrefix + "ds2.jdbc-url");
@@ -94,7 +81,7 @@ class MySQLTest {
     @Test
     void assertShardingInLocalTransactions() throws SQLException {
         jdbcUrlPrefix = "jdbc:mysql://localhost:" + container.getMappedPort(3306) + "/";
-        logicDataSource = createDataSource();
+        DataSource logicDataSource = createDataSource();
         testShardingService = new TestShardingService(logicDataSource);
         initEnvironment();
         testShardingService.processSuccess();

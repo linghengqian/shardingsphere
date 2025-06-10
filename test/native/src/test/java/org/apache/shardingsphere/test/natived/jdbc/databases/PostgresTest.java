@@ -36,19 +36,10 @@ import java.sql.SQLException;
 @EnabledInNativeImage
 class PostgresTest {
     
-    private DataSource logicDataSource;
-    
     private TestShardingService testShardingService;
     
     @AfterEach
-    void afterEach() throws SQLException {
-        try (Connection connection = logicDataSource.getConnection()) {
-            ContextManager contextManager = connection.unwrap(ShardingSphereConnection.class).getContextManager();
-            for (StorageUnit each : contextManager.getStorageUnits(DefaultDatabase.LOGIC_NAME).values()) {
-                each.getDataSource().unwrap(HikariDataSource.class).close();
-            }
-            contextManager.close();
-        }
+    void afterEach() {
         ContainerDatabaseDriver.killContainers();
     }
     
@@ -57,7 +48,7 @@ class PostgresTest {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
         config.setJdbcUrl("jdbc:shardingsphere:classpath:test-native/yaml/jdbc/databases/postgresql.yaml");
-        logicDataSource = new HikariDataSource(config);
+        DataSource logicDataSource = new HikariDataSource(config);
         testShardingService = new TestShardingService(logicDataSource);
         initEnvironment();
         testShardingService.processSuccess();

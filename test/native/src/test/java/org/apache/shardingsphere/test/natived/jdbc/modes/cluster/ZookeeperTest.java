@@ -23,10 +23,6 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.test.TestingServer;
-import org.apache.shardingsphere.driver.jdbc.core.connection.ShardingSphereConnection;
-import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
-import org.apache.shardingsphere.infra.metadata.database.resource.unit.StorageUnit;
-import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.test.natived.commons.TestShardingService;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledInNativeImage;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +44,6 @@ class ZookeeperTest {
     
     private final String systemPropKeyPrefix = "fixture.test-native.yaml.mode.cluster.zookeeper.";
     
-    private DataSource logicDataSource;
-    
     private TestShardingService testShardingService;
     
     @BeforeEach
@@ -59,14 +52,7 @@ class ZookeeperTest {
     }
     
     @AfterEach
-    void afterEach() throws SQLException {
-        try (Connection connection = logicDataSource.getConnection()) {
-            ContextManager contextManager = connection.unwrap(ShardingSphereConnection.class).getContextManager();
-            for (StorageUnit each : contextManager.getStorageUnits(DefaultDatabase.LOGIC_NAME).values()) {
-                each.getDataSource().unwrap(HikariDataSource.class).close();
-            }
-            contextManager.close();
-        }
+    void afterEach() {
         System.clearProperty(systemPropKeyPrefix + "server-lists");
     }
     
@@ -74,7 +60,7 @@ class ZookeeperTest {
     void assertShardingInLocalTransactions() throws Exception {
         try (TestingServer testingServer = new TestingServer()) {
             String connectString = testingServer.getConnectString();
-            logicDataSource = createDataSource(connectString);
+            DataSource logicDataSource = createDataSource(connectString);
             testShardingService = new TestShardingService(logicDataSource);
             initEnvironment();
             testShardingService.processSuccess();

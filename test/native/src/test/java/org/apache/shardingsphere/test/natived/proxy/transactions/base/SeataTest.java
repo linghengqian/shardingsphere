@@ -97,7 +97,6 @@ class SeataTest {
     void afterEach() {
         Awaitility.await().pollDelay(5L, TimeUnit.SECONDS).until(() -> true);
         System.clearProperty(serviceDefaultGroupListKey);
-        proxyTestingServer.close();
         TmNettyRemotingClient.getInstance().destroy();
         RmNettyRemotingClient.getInstance().destroy();
         ConfigurationFactory.reload();

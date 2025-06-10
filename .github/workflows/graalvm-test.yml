@@ -1,0 +1,283 @@
+name: NativeTest CI - GraalVM Native Image
+
+on:
+  push:
+    branches: [ rethread ]
+  workflow_dispatch:
+  
+concurrency:
+  group: graalvm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nativetest:
+    name: GraalVM - GraalVM CE for JDK ${{ matrix.java-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      matrix:
+        os: [ 'ubuntu-latest', 'windows-2025' ]
+        java-version: [ '22.0.2' ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Uninstall Docker Engine for WCOW on Windows Server
+        if: matrix.os == 'windows-2025'
+        run: |
+          $myWindowsID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+          $myWindowsPrincipal = new-object System.Security.Principal.WindowsPrincipal($myWindowsID)
+          $adminRole = [System.Security.Principal.WindowsBuiltInRole]::Administrator
+          if (-not $myWindowsPrincipal.IsInRole($adminRole))
+          {
+              throw "You must run this script as administrator"
+          }
+          if (Get-Service -Name docker -ErrorAction SilentlyContinue)
+          {
+              $containers = docker ps -aq 2> $null
+              if ($containers)
+              {
+                  docker stop $containers 2> $null | Out-Null
+                  docker rm -f $containers 2> $null
+              }
+              $images = docker images -q 2> $null
+              if ($images)
+              {
+                  docker rmi -f $images 2> $null
+              }
+              $volumes = docker volume ls -q 2> $null
+              if ($volumes)
+              {
+                  docker volume rm -f $volumes 2> $null
+              }
+              $networks = docker network ls --format "{{.Name}}" 2> $null
+              if ($networks)
+              {
+                  $customNetworks = @()
+                  foreach ($network in $networks)
+                  {
+                      if ($network -ne "bridge" -and $network -ne "host" -and $network -ne "none" -and $network -ne "nat")
+                      {
+                          $customNetworks += $network
+                      }
+                  }
+                  if ($customNetworks.Count -gt 0)
+                  {
+                      foreach ($network in $customNetworks)
+                      {
+                          docker network rm $network 2> $null
+                      }
+                  }
+              }
+              Stop-Service -Name docker -Force -ErrorAction Stop
+              & sc.exe delete docker 2>&1
+          }
+          $registryPaths = @(
+              "HKLM:\SYSTEM\CurrentControlSet\Services\docker",
+              "HKLM:\SYSTEM\ControlSet002\Services\docker",
+              "HKLM:\SYSTEM\CurrentControlSet\Services\EventLog\Application\docker"
+          )
+          foreach ($regPath in $registryPaths)
+          {
+              if (Test-Path $regPath)
+              {
+                  Remove-Item $regPath -Recurse -Force
+              }
+          }
+          $dockerExe = Join-Path $env:windir "System32\docker.exe"
+          if (Test-Path $dockerExe)
+          {
+              Remove-Item $dockerExe -Force
+          }
+          $dockerdExe = Join-Path $env:windir "System32\dockerd.exe"
+          if (Test-Path $dockerdExe)
+          {
+              Remove-Item $dockerdExe -Force
+          }
+          if (-not (Test-Path "$( $env:ProgramData )\docker"))
+          {
+              exit 0
+          }
+          $services = @("cexecsvc", "vmcompute", "vmicguestinterface", "vmicheartbeat", "vmickvpexchange", "vmicrdv", "vmicshutdown", "vmictimesync", "vmicvmsession", "vmicvss")
+          foreach ($serviceName in $services)
+          {
+              $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+              if ($service -and $service.Status -eq 'Running')
+              {
+                  Stop-Service -Name $serviceName -Force -ErrorAction SilentlyContinue
+              }
+          }
+          Start-Sleep -Seconds 2
+          $hcsdiagOutput = & hcsdiag.exe list 2> $null
+          if ($hcsdiagOutput)
+          {
+              $containerMatches = $hcsdiagOutput | Select-String -Pattern "container" -SimpleMatch
+              if ($containerMatches)
+              {
+                  $containerMatches | ForEach-Object {
+                      $line = $_.Line
+                      if ($line -match '\{([^}]+)\}')
+                      {
+                          $containerId = $Matches[1]
+                          & hcsdiag.exe kill $containerId 2> $null
+                      }
+                  }
+              }
+          }
+          if (Get-Command Get-ComputeProcess -ErrorAction SilentlyContinue)
+          {
+              $computeProcesses = Get-ComputeProcess -ErrorAction SilentlyContinue
+              if ($computeProcesses)
+              {
+                  $containerProcesses = $computeProcesses | Where-Object { $_.Type -like "*container*" }
+                  if ($containerProcesses)
+                  {
+                      $containerProcesses | ForEach-Object {
+                          $_ | Stop-ComputeProcess -Force -ErrorAction SilentlyContinue
+                      }
+                  }
+              }
+          }
+          Start-Sleep -Seconds 3
+          $windowsFilterPath = Join-Path "$( $env:ProgramData )\docker" "windowsfilter"
+          if (Test-Path $windowsFilterPath)
+          {
+              $layerDirs = Get-ChildItem -Path $windowsFilterPath -Directory -ErrorAction SilentlyContinue
+              if ($layerDirs)
+              {
+                  $job = Start-Job -ScriptBlock {
+                      param($layers)
+                      Add-Type -TypeDefinition @"
+          using System;
+          using System.Runtime.InteropServices;
+          public class Hcs
+          {
+          [DllImport("ComputeStorage.dll", SetLastError=true, CharSet=CharSet.Unicode)]
+          public static extern int HcsDestroyLayer(string layerPath);
+          }
+          "@
+                      $results = @()
+                      foreach ($layer in $layers)
+                      {
+                          try
+                          {
+                              $result = [Hcs]::HcsDestroyLayer($layer.FullName)
+                              $results += [PSCustomObject]@{
+                                  Layer = $layer.Name
+                                  Path = $layer.FullName
+                                  Result = $result
+                                  Success = ($result -eq 0)
+                              }
+                          }
+                          catch
+                          {
+                              $results += [PSCustomObject]@{
+                                  Layer = $layer.Name
+                                  Path = $layer.FullName
+                                  Result = -1
+                                  Success = $false
+                                  Error = $_.Exception.Message
+                              }
+                          }
+                      }
+                      return $results
+                  } -ArgumentList @(,$layerDirs)
+                  if ($job | Wait-Job -Timeout 120)
+                  {
+                      $results = $job | Receive-Job
+                      $job | Remove-Job
+                  }
+                  else
+                  {
+                      $job | Stop-Job
+                      $job | Remove-Job
+                  }
+              }
+              if (Test-Path $windowsFilterPath)
+              {
+                  & cmd.exe /c "rd /s /q `"$windowsFilterPath`"" 2> $null | Out-Null
+                  if (Test-Path $windowsFilterPath)
+                  {
+                      $tempEmptyDir = Join-Path $env:TEMP "EmptyDir_$( Get-Random )"
+                      try
+                      {
+                          New-Item -ItemType Directory -Path $tempEmptyDir -Force | Out-Null
+                          & robocopy.exe $tempEmptyDir $windowsFilterPath /MIR /R:1 /W:1 /NP /NFL /NDL /NJH /NJS 2> $null | Out-Null
+                          Remove-Item $tempEmptyDir -Force -ErrorAction SilentlyContinue
+                      }
+                      catch
+                      {
+                          Remove-Item $tempEmptyDir -Force -ErrorAction SilentlyContinue
+                      }
+                  }
+              }
+          }
+          Remove-Item "$( $env:ProgramData )\docker" -Recurse -Force
+          $dockerDownloads = "$env:UserProfile\DockerDownloads"
+          if (Test-Path $dockerDownloads)
+          {
+              Remove-Item $dockerDownloads -Recurse -Force
+          }
+      - name: Setup Rancher Desktop without GUI
+        if: matrix.os == 'windows-2025'
+        run: |
+          winget install --id jazzdelightsme.WingetPathUpdater --source winget
+          winget install --id SUSE.RancherDesktop --source winget --skip-dependencies
+          rdctl start --application.start-in-background --container-engine.name=moby --kubernetes.enabled=false
+          "PATH=$env:PATH" >> $env:GITHUB_ENV
+      - name: Wait for Rancher Desktop backend
+        if: matrix.os == 'windows-2025'
+        run: |
+          $deadline = (Get-Date).AddMinutes(10)
+          $state = "UNKNOWN"
+          while ((Get-Date) -lt $deadline) {
+            $now = Get-Date
+            $deadlineString = $deadline.ToString("u")
+            Write-Host "Waiting for backend: ($state) $now / $deadlineString"
+            $rdProcess = Get-Process -Name "Rancher Desktop" -ErrorAction SilentlyContinue | Sort-Object -Property StartTime | Select-Object -First 1
+            if (-not $rdProcess) {
+                $state = "NOT_RUNNING"
+                Start-Sleep -Seconds 10
+                continue
+            }
+            $rdEngineJsonPath = Join-Path $env:LOCALAPPDATA "rancher-desktop\rd-engine.json"
+            if (-not (Test-Path $rdEngineJsonPath)) {
+                $state = "NO_SERVER_CONFIG"
+                Start-Sleep -Seconds 10
+                continue
+            }
+            try {
+                $state = (rdctl api /v1/backend_state | ConvertFrom-Json).vmState
+            } catch {
+                $state = "NO_RESPONSE"
+            }
+            switch ($state) {
+              "ERROR" {
+                Write-Error "Backend reached error state."
+                exit 1
+              }
+              "STARTED" {
+                Write-Host "PID $($rdProcess.Id) has reached state $state, accepting"
+                exit 0
+              }
+              "DISABLED" {
+                Write-Host "PID $($rdProcess.Id) has reached state $state, accepting"
+                exit 0
+              }
+              default {
+                Write-Host "Backend state: $state"
+              }
+            }
+            Start-Sleep -Seconds 10
+          }
+          Write-Error "Timed out waiting for backend to stabilize."
+          Write-Error "Current time: $(Get-Date)"
+          Write-Error "Deadline: $($deadline.ToString("u"))"
+          exit 1
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+          native-image-job-reports: 'true'
+      - name: Run test with GraalVM CE for ${{ matrix.java-version }}
+        run: ./mvnw -PgenerateMetadata -e -T 1C clean test

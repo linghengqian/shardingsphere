@@ -19,7 +19,9 @@ package org.apache.shardingsphere.test.natived.commons.proxy;
 
 import lombok.Getter;
 import org.apache.curator.test.InstanceSpec;
+import org.apache.shardingsphere.infra.database.core.DefaultDatabase;
 import org.apache.shardingsphere.proxy.Bootstrap;
+import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.awaitility.Awaitility;
 
 import java.io.IOException;
@@ -61,6 +63,7 @@ public final class ProxyTestingServer {
      * Force close ShardingSphere Proxy.
      */
     public void close() {
+        ProxyContext.getInstance().getContextManager().close();
         completableFuture.cancel(false);
         Awaitility.await().atMost(1L, TimeUnit.MINUTES).until(completableFuture::isDone);
     }
