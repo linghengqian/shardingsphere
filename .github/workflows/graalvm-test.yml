@@ -1,0 +1,37 @@
+name: NativeTest CI - GraalVM Native Image
+
+on:
+  push:
+    branches: [ rethread ]
+  workflow_dispatch:
+  
+concurrency:
+  group: graalvm-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MAVEN_OPTS: -Dhttp.keepAlive=false -Dmaven.wagon.http.pool=false -Dmaven.wagon.http.retryHandler.class=standard -Dmaven.wagon.http.retryHandler.count=3 -Dspotless.apply.skip=true
+
+jobs:
+  nativetest:
+    if: github.repository == 'apache/shardingsphere'
+    name: GraalVM - GraalVM CE for JDK ${{ matrix.java-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      max-parallel: 20
+      fail-fast: false
+      matrix:
+        os: [ 'ubuntu-latest' ]
+        java-version: [ '22.0.2' ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'graalvm-community'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          cache: 'maven'
+          native-image-job-reports: 'true'
+      - name: Run nativeTest with GraalVM CE for ${{ matrix.java-version }}
+        run: ./mvnw -PgenerateMetadata -e -T 1C clean test
