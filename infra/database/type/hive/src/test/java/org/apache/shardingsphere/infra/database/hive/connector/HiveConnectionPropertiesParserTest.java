@@ -17,7 +17,6 @@
 
 package org.apache.shardingsphere.infra.database.hive.connector;
 
-import org.apache.hive.jdbc.JdbcUriParseException;
 import org.apache.shardingsphere.infra.database.core.connector.ConnectionProperties;
 import org.apache.shardingsphere.infra.database.core.connector.ConnectionPropertiesParser;
 import org.apache.shardingsphere.infra.database.core.spi.DatabaseTypedSPILoader;
@@ -26,12 +25,16 @@ import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.test.util.PropertiesBuilder;
 import org.apache.shardingsphere.test.util.PropertiesBuilder.Property;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.support.ParameterDeclarations;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
 import java.util.stream.Stream;
 
@@ -39,6 +42,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@EnabledForJreRange(min = JRE.JAVA_17, disabledReason = "See https://issues.apache.org/jira/browse/HIVE-26473")
 class HiveConnectionPropertiesParserTest {
     
     private final ConnectionPropertiesParser parser = DatabaseTypedSPILoader.getService(ConnectionPropertiesParser.class, TypedSPILoader.getService(DatabaseType.class, "Hive"));
@@ -56,16 +60,16 @@ class HiveConnectionPropertiesParserTest {
     
     @Test
     void assertNewConstructorFailure() {
-        assertThrows(JdbcUriParseException.class, () -> parser.parse("jdbc:hive2://localhost:10000;principal=test", null, null));
-        assertThrows(JdbcUriParseException.class, () -> parser.parse("jdbc:hive2://localhost:10000;principal=hive/HiveServer2Host@YOUR-REALM.COM", null, null));
-        assertThrows(JdbcUriParseException.class, () -> parser.parse("jdbc:hive2://localhost:10000test", null, null));
+        assertThrows(InvocationTargetException.class, () -> parser.parse("jdbc:hive2://localhost:10000;principal=test", null, null));
+        assertThrows(InvocationTargetException.class, () -> parser.parse("jdbc:hive2://localhost:10000;principal=hive/HiveServer2Host@YOUR-REALM.COM", null, null));
+        assertThrows(InvocationTargetException.class, () -> parser.parse("jdbc:hive2://localhost:10000test", null, null));
         assertThrows(RuntimeException.class, () -> parser.parse("jdbc:hive2://", null, null));
     }
     
     private static class NewConstructorTestCaseArgumentsProvider implements ArgumentsProvider {
         
         @Override
-        public Stream<? extends Arguments> provideArguments(final ExtensionContext extensionContext) {
+        public Stream<? extends Arguments> provideArguments(final ParameterDeclarations parameters, final ExtensionContext extensionContext) {
             return Stream.of(
                     Arguments.of("simple_first", "jdbc:hive2://localhost:10001/default", "localhost", 10001, "default", null, new Properties()),
                     Arguments.of("simple_second", "jdbc:hive2://localhost/notdefault", "localhost", 10000, "notdefault", null, new Properties()),

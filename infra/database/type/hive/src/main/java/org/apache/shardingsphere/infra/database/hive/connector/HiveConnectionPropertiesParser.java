@@ -17,16 +17,12 @@
 
 package org.apache.shardingsphere.infra.database.hive.connector;
 
-import lombok.SneakyThrows;
-import org.apache.hive.jdbc.JdbcUriParseException;
-import org.apache.hive.jdbc.Utils;
-import org.apache.hive.jdbc.Utils.JdbcConnectionParams;
-import org.apache.hive.jdbc.ZooKeeperHiveClientException;
 import org.apache.shardingsphere.infra.database.core.connector.ConnectionProperties;
 import org.apache.shardingsphere.infra.database.core.connector.ConnectionPropertiesParser;
 import org.apache.shardingsphere.infra.database.core.connector.StandardConnectionProperties;
+import org.apache.shardingsphere.infra.util.reflection.ReflectionUtils;
 
-import java.sql.SQLException;
+import java.lang.reflect.Method;
 import java.util.Properties;
 
 /**
@@ -34,25 +30,30 @@ import java.util.Properties;
  */
 public final class HiveConnectionPropertiesParser implements ConnectionPropertiesParser {
     
-    @SneakyThrows({ZooKeeperHiveClientException.class, JdbcUriParseException.class, SQLException.class})
     @Override
     public ConnectionProperties parse(final String url, final String username, final String catalog) {
-        JdbcConnectionParams params = Utils.parseURL(url, new Properties());
-        if (null == params.getHost() && 0 == params.getPort()) {
+        String host, dbName;
+        int port;
+        Properties queryProperties = new Properties();
+        try {
+            Method parseURL = Class.forName("org.apache.hive.jdbc.Utils").getMethod("parseURL", String.class);
+            Object jdbcConnectionParams = ReflectionUtils.invokeMethod(parseURL, null, url);
+            Class<?> jdbcConnectionParamsClass = Class.forName("org.apache.hive.jdbc.Utils$JdbcConnectionParams");
+            host = ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getHost"), jdbcConnectionParams);
+            port = ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getPort"), jdbcConnectionParams);
+            dbName = ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getDbName"), jdbcConnectionParams);
+            queryProperties.putAll(ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getSessionVars"), jdbcConnectionParams));
+            queryProperties.putAll(ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getHiveConfs"), jdbcConnectionParams));
+            queryProperties.putAll(ReflectionUtils.invokeMethod(jdbcConnectionParamsClass.getMethod("getHiveVars"), jdbcConnectionParams));
+        } catch (final ClassNotFoundException | NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+        }
+        if (null == host && 0 == port) {
             throw new RuntimeException("HiveServer2 in embedded mode has been deprecated by Apache Hive, "
                     + "See https://issues.apache.org/jira/browse/HIVE-28418 . "
                     + "Users should start local HiveServer2 through Docker Image https://hub.docker.com/r/apache/hive .");
         }
-        Properties queryProperties = new Properties();
-        queryProperties.putAll(params.getSessionVars());
-        queryProperties.putAll(params.getHiveConfs());
-        queryProperties.putAll(params.getHiveVars());
-        return new StandardConnectionProperties(params.getHost(),
-                params.getPort(),
-                params.getDbName(),
-                null,
-                queryProperties,
-                new Properties());
+        return new StandardConnectionProperties(host, port, dbName, null, queryProperties, new Properties());
     }
     
     @Override
