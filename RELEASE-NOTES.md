@@ -68,6 +68,7 @@
 1. Pipeline: InventoryDumperContextSplitter supports multi-columns unique key first integer column splitting - [#36935](https://github.com/apache/shardingsphere/pull/36935)
 1. Encrypt: Support handling show create view result decoration in encrypt - [#37299](https://github.com/apache/shardingsphere/pull/37299)
 1. JDBC: Enhance ResultSetUtils to support flexible string date/time conversions - [37424](https://github.com/apache/shardingsphere/pull/37424)
+1. Proxy Native: Support building Proxy Native via GraalVM CE for JDK 25 - [#37357](https://github.com/apache/shardingsphere/pull/37357)
 
 ### Bug Fixes
 
