@@ -64,6 +64,9 @@ rules:
   keyGenerators:
     snowflake:
       type: SNOWFLAKE
+      props:
+        # TODO This is to avoid `SQL Algorithm 'SnowflakeKeyGenerateAlgorithm' execute failed, reason is: Clock is moving backwards, last time is 1776651511060 milliseconds, current time is 1776651510716 milliseconds..`, this requires investigating what is happening inside Doris FE
+        max-tolerate-time-difference-milliseconds: 1908
   auditors:
     sharding_key_required_auditor:
       type: DML_SHARDING_CONDITIONS

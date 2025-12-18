@@ -28,7 +28,37 @@
     
     <properties>
         <seata.version>2.6.0</seata.version>
+        <!--TODO The related prop definitions will be removed from version management in the future,
+                which is related to internal dependency conflicts with `io.github.linghengqian:hive-server2-jdbc-driver-thin`.-->
+        <woodstox-core.version>6.5.1</woodstox-core.version>
+        <libthrift.version>0.16.0</libthrift.version>
+        <httpcore.version>4.4.13</httpcore.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-runtime</artifactId>
+                <version>${antlr4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.woodstox</groupId>
+                <artifactId>woodstox-core</artifactId>
+                <version>${woodstox-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.thrift</groupId>
+                <artifactId>libthrift</artifactId>
+                <version>${libthrift.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${httpcore.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     
     <dependencies>
         <dependency>
@@ -114,16 +144,6 @@
             <artifactId>hive-server2-jdbc-driver-thin</artifactId>
             <version>${hive-server2-jdbc-driver-thin.version}</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.woodstox</groupId>
-                    <artifactId>woodstox-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-text</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         
         <dependency>
