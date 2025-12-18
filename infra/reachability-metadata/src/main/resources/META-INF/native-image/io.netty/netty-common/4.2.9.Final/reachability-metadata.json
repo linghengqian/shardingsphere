@@ -1,0 +1,265 @@
+{
+  "reflection": [
+    {
+      "condition": {
+        "typeReached": "io.netty.buffer.AbstractByteBufAllocator"
+      },
+      "type": "io.netty.buffer.AbstractByteBufAllocator"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.buffer.AdaptivePoolingAllocator$Magazine"
+      },
+      "type": "io.netty.buffer.AdaptivePoolingAllocator$Magazine"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.AbstractChannelHandlerContext"
+      },
+      "type": "io.netty.channel.AbstractChannelHandlerContext"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ChannelOutboundBuffer"
+      },
+      "type": "io.netty.channel.ChannelOutboundBuffer"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.DefaultChannelConfig"
+      },
+      "type": "io.netty.channel.DefaultChannelConfig"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.DefaultChannelPipeline"
+      },
+      "type": "io.netty.channel.DefaultChannelPipeline"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.ClassInitializerUtil"
+      },
+      "type": "io.netty.channel.DefaultFileRegion"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.ClassInitializerUtil"
+      },
+      "type": "io.netty.channel.epoll.NativeDatagramPacketArray$NativeDatagramPacket"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.bootstrap.AbstractBootstrap"
+      },
+      "type": "io.netty.channel.socket.nio.NioServerSocketChannel",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ReflectiveChannelFactory"
+      },
+      "type": "io.netty.channel.socket.nio.NioServerSocketChannel"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.bootstrap.Bootstrap"
+      },
+      "type": "io.netty.channel.socket.nio.NioSocketChannel",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": []
+        }
+      ]
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ReflectiveChannelFactory"
+      },
+      "type": "io.netty.channel.socket.nio.NioSocketChannel"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.ClassInitializerUtil"
+      },
+      "type": "io.netty.channel.unix.PeerCredentials"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.DefaultAttributeMap"
+      },
+      "type": "io.netty.util.DefaultAttributeMap"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.DefaultAttributeMap$DefaultAttribute"
+      },
+      "type": "io.netty.util.DefaultAttributeMap$DefaultAttribute"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.Recycler$DefaultHandle"
+      },
+      "type": "io.netty.util.Recycler$DefaultHandle"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.ReferenceCountUtil"
+      },
+      "type": "io.netty.util.ReferenceCountUtil"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.ResourceLeakDetector$DefaultResourceLeak"
+      },
+      "type": "io.netty.util.ResourceLeakDetector$DefaultResourceLeak"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.concurrent.DefaultPromise"
+      },
+      "type": "io.netty.util.concurrent.DefaultPromise"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.concurrent.MpscIntQueue$MpscAtomicIntegerArrayQueue"
+      },
+      "type": "io.netty.util.concurrent.MpscIntQueue$MpscAtomicIntegerArrayQueue"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.concurrent.SingleThreadEventExecutor"
+      },
+      "type": "io.netty.util.concurrent.SingleThreadEventExecutor"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.RefCnt$AtomicRefCnt"
+      },
+      "type": "io.netty.util.internal.RefCnt"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueColdProducerFields"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueColdProducerFields"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueConsumerFields"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueConsumerFields"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueProducerFields"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.BaseMpscLinkedAtomicArrayQueueProducerFields"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueueConsumerIndexField"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueueConsumerIndexField"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueueProducerIndexField"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.MpmcAtomicArrayQueueProducerIndexField"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueConsumerIndexField"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueConsumerIndexField"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueProducerIndexField"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueProducerIndexField"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueProducerLimitField"
+      },
+      "type": "io.netty.util.internal.shaded.org.jctools.queues.atomic.unpadded.MpscAtomicUnpaddedArrayQueueProducerLimitField"
+    }
+  ],
+  "resources": [
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.AbstractChannelHandlerContext$WriteTask"
+      },
+      "glob": "META-INF/seata/io.seata.core.serializer.Serializer"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.AbstractChannelHandlerContext$WriteTask"
+      },
+      "glob": "META-INF/seata/org.apache.seata.core.serializer.Serializer"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.concurrent.FastThreadLocalRunnable"
+      },
+      "glob": "META-INF/seata/org.apache.seata.rm.datasource.undo.UndoExecutorHolder"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.AbstractChannelHandlerContext$WriteTask"
+      },
+      "glob": "META-INF/services/io.seata.core.serializer.Serializer"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ChannelInitializer"
+      },
+      "glob": "META-INF/services/java.nio.charset.spi.CharsetProvider"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.handler.flow.FlowControlHandler"
+      },
+      "glob": "META-INF/services/java.nio.charset.spi.CharsetProvider"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.AbstractChannelHandlerContext$WriteTask"
+      },
+      "glob": "META-INF/services/org.apache.seata.core.serializer.Serializer"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.util.concurrent.FastThreadLocalRunnable"
+      },
+      "glob": "META-INF/services/org.apache.seata.rm.datasource.undo.UndoExecutorHolder"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ChannelInitializer"
+      },
+      "glob": "META-INF/services/org.apache.shardingsphere.proxy.frontend.spi.DatabaseProtocolFrontendEngine"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.channel.ChannelInitializer"
+      },
+      "glob": "META-INF/services/org.apache.shardingsphere.transaction.spi.TransactionHook"
+    },
+    {
+      "condition": {
+        "typeReached": "io.netty.buffer.AllocateChunkEvent"
+      },
+      "module": "jdk.jfr",
+      "glob": "jdk/jfr/internal/types/metadata.bin"
+    }
+  ]
+}

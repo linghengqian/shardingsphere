@@ -162,6 +162,5 @@
       },
       "glob": "jdbc-v2-version.properties"
     }
-  ],
-  "bundles": []
+  ]
 }
