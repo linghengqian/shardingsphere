@@ -42,7 +42,9 @@ public final class OpenTelemetryJDBCExecutorCallbackAdvice extends TracingJDBCEx
                                      final ConnectionProperties connectionProps, final DatabaseType databaseType) {
         Tracer tracer = GlobalOpenTelemetry.getTracer(OpenTelemetryConstants.TRACER_NAME);
         SpanBuilder spanBuilder = tracer.spanBuilder(OPERATION_NAME);
-        spanBuilder.setParent(Context.current().with(parentSpan));
+        if (null != parentSpan) {
+            spanBuilder.setParent(Context.current().with(parentSpan));
+        }
         spanBuilder.setAttribute(AttributeConstants.COMPONENT, AttributeConstants.COMPONENT_NAME);
         spanBuilder.setAttribute(AttributeConstants.DB_TYPE, databaseType.getType());
         spanBuilder.setAttribute(AttributeConstants.DB_INSTANCE, executionUnit.getExecutionUnit().getDataSourceName())
