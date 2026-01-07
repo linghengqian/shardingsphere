@@ -33,8 +33,21 @@ public final class OpenTelemetryTracingPluginLifecycleService implements PluginL
     public void start(final PluginConfiguration pluginConfig, final boolean isEnhancedForProxy) {
         PluginContext.getInstance().setEnhancedForProxy(isEnhancedForProxy);
         pluginConfig.getProps().forEach((key, value) -> setSystemProperty(String.valueOf(key), String.valueOf(value)));
+        setMissingOtlpEndpoints(pluginConfig);
         OpenTelemetrySdk openTelemetrySdk = AutoConfiguredOpenTelemetrySdk.initialize().getOpenTelemetrySdk();
         openTelemetrySdk.getTracer(OpenTelemetryConstants.TRACER_NAME);
+    }
+    
+    private void setMissingOtlpEndpoints(final PluginConfiguration pluginConfig) {
+        String generalEndpoint = pluginConfig.getProps().getProperty("otel.exporter.otlp.endpoint");
+        String tracesEndpoint = pluginConfig.getProps().getProperty("otel.exporter.otlp.traces.endpoint");
+        if (null == generalEndpoint && null != tracesEndpoint) {
+            System.setProperty("otel.exporter.otlp.endpoint", tracesEndpoint);
+            generalEndpoint = tracesEndpoint;
+        }
+        if (null == pluginConfig.getProps().getProperty("otel.exporter.otlp.metrics.endpoint") && null != generalEndpoint) {
+            System.setProperty("otel.exporter.otlp.metrics.endpoint", generalEndpoint);
+        }
     }
     
     private void setSystemProperty(final String key, final String value) {
