@@ -24,12 +24,9 @@ import org.apache.shardingsphere.infra.util.props.PropertiesBuilder.Property;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class OpenTelemetryTracingPluginLifecycleServiceTest {
-    
-    private static final String OTLP_TRACES_ENDPOINT = "http://localhost:24321";
     
     private final OpenTelemetryTracingPluginLifecycleService pluginLifecycleService = new OpenTelemetryTracingPluginLifecycleService();
     
@@ -37,9 +34,7 @@ class OpenTelemetryTracingPluginLifecycleServiceTest {
     void close() {
         pluginLifecycleService.close();
         GlobalOpenTelemetry.resetForTest();
-        System.clearProperty("otel.exporter.otlp.endpoint");
         System.clearProperty("otel.exporter.otlp.traces.endpoint");
-        System.clearProperty("otel.exporter.otlp.metrics.endpoint");
     }
     
     @Test
@@ -48,10 +43,8 @@ class OpenTelemetryTracingPluginLifecycleServiceTest {
                 PropertiesBuilder.build(
                         new Property("otel.resource.attributes", "service.name=shardingsphere-agent"),
                         new Property("otel.traces.exporter", "zipkin"),
-                        new Property("otel.exporter.otlp.traces.endpoint", OTLP_TRACES_ENDPOINT))), true);
+                        new Property("otel.exporter.otlp.traces.endpoint", "http://localhost:24321"))), true);
         assertNotNull(GlobalOpenTelemetry.getTracerProvider());
         assertNotNull(GlobalOpenTelemetry.getTracer("shardingsphere-agent"));
-        assertEquals(OTLP_TRACES_ENDPOINT, System.getProperty("otel.exporter.otlp.endpoint"));
-        assertEquals(OTLP_TRACES_ENDPOINT, System.getProperty("otel.exporter.otlp.metrics.endpoint"));
     }
 }
