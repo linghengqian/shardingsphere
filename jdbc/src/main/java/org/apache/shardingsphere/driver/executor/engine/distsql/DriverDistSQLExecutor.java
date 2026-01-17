@@ -40,6 +40,8 @@ import java.sql.Statement;
 @RequiredArgsConstructor
 public final class DriverDistSQLExecutor {
     
+    private static final int DEFAULT_CONNECTION_SIZE = 1;
+    
     private final ShardingSphereConnection connection;
     
     /**
@@ -99,7 +101,7 @@ public final class DriverDistSQLExecutor {
     }
     
     private DistSQLConnectionContext createDistSQLConnectionContext(final QueryContext queryContext) {
-        return new DistSQLConnectionContext(queryContext, 1,
+        return new DistSQLConnectionContext(queryContext, DEFAULT_CONNECTION_SIZE,
                 connection.getContextManager().getMetaDataContexts().getMetaData().getDatabase(connection.getCurrentDatabaseName()).getProtocolType(),
                 connection.getDatabaseConnectionManager(), null);
     }

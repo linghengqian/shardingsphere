@@ -29,6 +29,8 @@ import java.util.List;
  */
 public final class DistSQLResultSetMetaData extends WrapperAdapter implements ResultSetMetaData {
     
+    private static final int DEFAULT_COLUMN_DISPLAY_SIZE = 255;
+    
     private final List<String> columnNames;
     
     public DistSQLResultSetMetaData(final List<String> columnNames) {
@@ -79,7 +81,7 @@ public final class DistSQLResultSetMetaData extends WrapperAdapter implements Re
     @Override
     public int getColumnDisplaySize(final int column) {
         checkColumnIndex(column);
-        return 255;
+        return DEFAULT_COLUMN_DISPLAY_SIZE;
     }
     
     @Override
