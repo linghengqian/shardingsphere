@@ -19,34 +19,44 @@ package org.apache.shardingsphere.test.natived.jdbc.distsql;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.shardingsphere.test.natived.commons.util.ResourceUtils;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScratchURLTest {
-    
-    private DataSource logicDataSource;
-    
-    @AfterEach
-    void afterEach() throws SQLException {
-        ResourceUtils.closeJdbcDataSource(logicDataSource);
-    }
     
     @Test
     void assertScratchURLCreatesDataSource() throws SQLException {
         HikariConfig config = new HikariConfig();
         config.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
-        config.setJdbcUrl("jdbc:shardingsphere:scratch:logic_db");
-        logicDataSource = new HikariDataSource(config);
-        assertNotNull(logicDataSource);
-        try (Connection connection = logicDataSource.getConnection()) {
+        config.setJdbcUrl("jdbc:shardingsphere:scratch:scratch_test_db");
+        try (
+                HikariDataSource dataSource = new HikariDataSource(config);
+                Connection connection = dataSource.getConnection()) {
             assertNotNull(connection);
+        }
+    }
+    
+    @Test
+    void assertDistSQLRegisterStorageUnit() throws SQLException {
+        HikariConfig config = new HikariConfig();
+        config.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
+        config.setJdbcUrl("jdbc:shardingsphere:scratch:scratch_distsql_db");
+        try (
+                HikariDataSource dataSource = new HikariDataSource(config);
+                Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.execute("REGISTER STORAGE UNIT ds_0 (URL='jdbc:h2:mem:scratch_test_ds_0;MODE=MYSQL;IGNORECASE=TRUE', USER='sa', PASSWORD='')");
+            try (ResultSet resultSet = statement.executeQuery("SHOW STORAGE UNITS")) {
+                assertNotNull(resultSet);
+                assertTrue(resultSet.next());
+            }
         }
     }
 }
