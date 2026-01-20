@@ -24,6 +24,8 @@ import org.apache.shardingsphere.distsql.statement.type.rql.RQLStatement;
 import org.apache.shardingsphere.distsql.statement.type.rul.RULStatement;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -46,7 +48,7 @@ class DriverDistSQLExecutorTest {
     void assertExecuteResultGetUpdateCount() {
         DriverDistSQLExecutor.ExecuteResult result = new DriverDistSQLExecutor.ExecuteResult(false, null, 5);
         assertFalse(result.hasResultSet());
-        assertTrue(result.getUpdateCount() == 5);
+        assertThat(result.getUpdateCount(), is(5));
     }
     
     @Test
