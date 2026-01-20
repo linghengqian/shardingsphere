@@ -46,6 +46,8 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     private boolean closed;
     
+    private boolean lastReadWasNull;
+    
     public DistSQLResultSet(final Collection<String> columnNames, final Collection<LocalDataQueryResultRow> rows, final Statement statement) {
         this.columnNames = new ArrayList<>(columnNames);
         this.rows = rows.iterator();
@@ -81,13 +83,14 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     @Override
     public boolean wasNull() {
         checkState();
-        return false;
+        return lastReadWasNull;
     }
     
     @Override
     public String getString(final int columnIndex) {
         checkStateForGetData();
         Object value = currentRow.getCell(columnIndex);
+        lastReadWasNull = null == value;
         return null == value ? null : value.toString();
     }
     
@@ -217,7 +220,9 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     @Override
     public Object getObject(final int columnIndex) {
         checkStateForGetData();
-        return currentRow.getCell(columnIndex);
+        Object value = currentRow.getCell(columnIndex);
+        lastReadWasNull = null == value;
+        return value;
     }
     
     @Override
