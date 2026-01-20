@@ -59,4 +59,23 @@ class ScratchURLTest {
             }
         }
     }
+    
+    @Test
+    void assertExecuteDDLAfterDistSQL() throws SQLException {
+        HikariConfig config = new HikariConfig();
+        config.setDriverClassName("org.apache.shardingsphere.driver.ShardingSphereDriver");
+        config.setJdbcUrl("jdbc:shardingsphere:scratch:scratch_ddl_db");
+        try (
+                HikariDataSource dataSource = new HikariDataSource(config);
+                Connection connection = dataSource.getConnection();
+                Statement statement = connection.createStatement()) {
+            statement.execute("REGISTER STORAGE UNIT ds_0 ("
+                    + "URL='jdbc:h2:mem:scratch_ddl_ds_0;MODE=MYSQL;IGNORECASE=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE', "
+                    + "USER='sa', PASSWORD='')");
+            try (ResultSet resultSet = statement.executeQuery("SHOW STORAGE UNITS")) {
+                assertNotNull(resultSet);
+                assertTrue(resultSet.next());
+            }
+        }
+    }
 }
