@@ -92,6 +92,8 @@ public final class ShardingSphereStatement extends AbstractStatementAdapter {
     
     private ResultSet currentResultSet;
     
+    private String processedSql;
+    
     public ShardingSphereStatement(final ShardingSphereConnection connection) {
         this(connection, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
@@ -317,14 +319,13 @@ public final class ShardingSphereStatement extends AbstractStatementAdapter {
         DatabaseType databaseType = currentDatabase.getProtocolType();
         SQLStatement sqlStatement = metaData.getGlobalRuleMetaData().getSingleRule(SQLParserRule.class).getSQLParserEngine(databaseType).parse(sql, false);
         SQLStatementContext sqlStatementContext = new SQLBindEngine(metaData, connection.getCurrentDatabaseName(), hintValueContext).bind(sqlStatement);
-        return new QueryContext(sqlStatementContext, sql, Collections.emptyList(), hintValueContext, connection.getDatabaseConnectionManager().getConnectionContext(), metaData);
+        return new QueryContext(sqlStatementContext, processedSql, Collections.emptyList(), hintValueContext, connection.getDatabaseConnectionManager().getConnectionContext(), metaData);
     }
     
     private QueryContext createDistSQLQueryContext(final DistSQLStatement sqlStatement, final String originSQL) throws SQLException {
         HintValueContext hintValueContext = SQLHintUtils.extractHint(originSQL);
-        String sql = SQLHintUtils.removeHint(originSQL);
         SQLStatementContext sqlStatementContext = new DistSQLStatementContext(sqlStatement);
-        return new QueryContext(sqlStatementContext, sql, Collections.emptyList(), hintValueContext, connection.getDatabaseConnectionManager().getConnectionContext(), metaData);
+        return new QueryContext(sqlStatementContext, processedSql, Collections.emptyList(), hintValueContext, connection.getDatabaseConnectionManager().getConnectionContext(), metaData);
     }
     
     private void prepareExecute(final QueryContext queryContext) throws SQLException {

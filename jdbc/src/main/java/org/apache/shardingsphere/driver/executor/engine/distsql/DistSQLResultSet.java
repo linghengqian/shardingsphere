@@ -111,7 +111,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public byte getByte(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0 : Byte.parseByte(value);
     }
@@ -123,7 +122,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public short getShort(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0 : Short.parseShort(value);
     }
@@ -135,7 +133,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public int getInt(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0 : Integer.parseInt(value);
     }
@@ -147,7 +144,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public long getLong(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0L : Long.parseLong(value);
     }
@@ -159,7 +155,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public float getFloat(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0F : Float.parseFloat(value);
     }
@@ -171,7 +166,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public double getDouble(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? 0D : Double.parseDouble(value);
     }
@@ -183,7 +177,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public BigDecimal getBigDecimal(final int columnIndex, final int scale) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? null : new BigDecimal(value).setScale(scale, RoundingMode.HALF_UP);
     }
@@ -195,7 +188,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public BigDecimal getBigDecimal(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? null : new BigDecimal(value);
     }
@@ -207,7 +199,6 @@ public final class DistSQLResultSet extends AbstractUnsupportedGeneratedKeysResu
     
     @Override
     public byte[] getBytes(final int columnIndex) {
-        checkStateForGetData();
         String value = getString(columnIndex);
         return null == value ? null : value.getBytes(StandardCharsets.UTF_8);
     }
