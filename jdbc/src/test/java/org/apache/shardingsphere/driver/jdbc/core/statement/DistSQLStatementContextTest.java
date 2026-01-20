@@ -21,9 +21,8 @@ import org.apache.shardingsphere.distsql.statement.DistSQLStatement;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class DistSQLStatementContextTest {
@@ -39,7 +38,7 @@ class DistSQLStatementContextTest {
     void assertGetTablesContext() {
         DistSQLStatement distSQLStatement = mock(DistSQLStatement.class);
         DistSQLStatementContext context = new DistSQLStatementContext(distSQLStatement);
-        assertNotNull(context.getTablesContext());
-        assertTrue(context.getTablesContext().getSimpleTables().isEmpty());
+        assertThat(context.getTablesContext(), is(notNullValue()));
+        assertThat(context.getTablesContext().getSimpleTables().isEmpty(), is(true));
     }
 }

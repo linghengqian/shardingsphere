@@ -28,9 +28,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DistSQLResultSetMetaDataTest {
     
@@ -49,22 +47,22 @@ class DistSQLResultSetMetaDataTest {
     
     @Test
     void assertIsAutoIncrement() {
-        assertFalse(metaData.isAutoIncrement(1));
+        assertThat(metaData.isAutoIncrement(1), is(false));
     }
     
     @Test
     void assertIsCaseSensitive() {
-        assertTrue(metaData.isCaseSensitive(1));
+        assertThat(metaData.isCaseSensitive(1), is(true));
     }
     
     @Test
     void assertIsSearchable() {
-        assertFalse(metaData.isSearchable(1));
+        assertThat(metaData.isSearchable(1), is(false));
     }
     
     @Test
     void assertIsCurrency() {
-        assertFalse(metaData.isCurrency(1));
+        assertThat(metaData.isCurrency(1), is(false));
     }
     
     @Test
@@ -74,7 +72,7 @@ class DistSQLResultSetMetaDataTest {
     
     @Test
     void assertIsSigned() {
-        assertFalse(metaData.isSigned(1));
+        assertThat(metaData.isSigned(1), is(false));
     }
     
     @Test
@@ -133,17 +131,17 @@ class DistSQLResultSetMetaDataTest {
     
     @Test
     void assertIsReadOnly() {
-        assertTrue(metaData.isReadOnly(1));
+        assertThat(metaData.isReadOnly(1), is(true));
     }
     
     @Test
     void assertIsWritable() {
-        assertFalse(metaData.isWritable(1));
+        assertThat(metaData.isWritable(1), is(false));
     }
     
     @Test
     void assertIsDefinitelyWritable() {
-        assertFalse(metaData.isDefinitelyWritable(1));
+        assertThat(metaData.isDefinitelyWritable(1), is(false));
     }
     
     @Test
@@ -168,6 +166,6 @@ class DistSQLResultSetMetaDataTest {
     
     @Test
     void assertIsWrapperFor() throws SQLException {
-        assertTrue(metaData.isWrapperFor(DistSQLResultSetMetaData.class));
+        assertThat(metaData.isWrapperFor(DistSQLResultSetMetaData.class), is(true));
     }
 }

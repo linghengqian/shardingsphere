@@ -26,8 +26,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class DriverDistSQLExecutorTest {
@@ -35,50 +33,50 @@ class DriverDistSQLExecutorTest {
     @Test
     void assertExecuteResultHasResultSet() {
         DriverDistSQLExecutor.ExecuteResult result = new DriverDistSQLExecutor.ExecuteResult(true, null, 0);
-        assertTrue(result.hasResultSet());
+        assertThat(result.hasResultSet(), is(true));
     }
     
     @Test
     void assertExecuteResultNoResultSet() {
         DriverDistSQLExecutor.ExecuteResult result = new DriverDistSQLExecutor.ExecuteResult(false, null, 0);
-        assertFalse(result.hasResultSet());
+        assertThat(result.hasResultSet(), is(false));
     }
     
     @Test
     void assertExecuteResultGetUpdateCount() {
         DriverDistSQLExecutor.ExecuteResult result = new DriverDistSQLExecutor.ExecuteResult(false, null, 5);
-        assertFalse(result.hasResultSet());
+        assertThat(result.hasResultSet(), is(false));
         assertThat(result.getUpdateCount(), is(5));
     }
     
     @Test
     void assertIsQueryStatementForRQL() throws Exception {
         RQLStatement rqlStatement = mock(RQLStatement.class);
-        assertTrue(invokeIsQueryStatement(rqlStatement));
+        assertThat(invokeIsQueryStatement(rqlStatement), is(true));
     }
     
     @Test
     void assertIsQueryStatementForRUL() throws Exception {
         RULStatement rulStatement = mock(RULStatement.class);
-        assertTrue(invokeIsQueryStatement(rulStatement));
+        assertThat(invokeIsQueryStatement(rulStatement), is(true));
     }
     
     @Test
     void assertIsQueryStatementForQueryableRAL() throws Exception {
         QueryableRALStatement queryableRALStatement = mock(QueryableRALStatement.class);
-        assertTrue(invokeIsQueryStatement(queryableRALStatement));
+        assertThat(invokeIsQueryStatement(queryableRALStatement), is(true));
     }
     
     @Test
     void assertIsQueryStatementForNonQueryableRAL() throws Exception {
         RALStatement ralStatement = mock(RALStatement.class);
-        assertFalse(invokeIsQueryStatement(ralStatement));
+        assertThat(invokeIsQueryStatement(ralStatement), is(false));
     }
     
     @Test
     void assertIsQueryStatementForRDL() throws Exception {
         RegisterStorageUnitStatement rdlStatement = mock(RegisterStorageUnitStatement.class);
-        assertFalse(invokeIsQueryStatement(rdlStatement));
+        assertThat(invokeIsQueryStatement(rdlStatement), is(false));
     }
     
     private boolean invokeIsQueryStatement(final Object statement) throws Exception {

@@ -31,11 +31,9 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 class DistSQLResultSetTest {
@@ -55,21 +53,21 @@ class DistSQLResultSetTest {
     
     @Test
     void assertNext() {
-        assertTrue(resultSet.next());
-        assertTrue(resultSet.next());
-        assertFalse(resultSet.next());
+        assertThat(resultSet.next(), is(true));
+        assertThat(resultSet.next(), is(true));
+        assertThat(resultSet.next(), is(false));
     }
     
     @Test
     void assertNextForEmptyResultSet() {
         DistSQLResultSet emptyResultSet = new DistSQLResultSet(Collections.emptyList(), Collections.emptyList(), statement);
-        assertFalse(emptyResultSet.next());
+        assertThat(emptyResultSet.next(), is(false));
     }
     
     @Test
     void assertClose() {
         resultSet.close();
-        assertTrue(resultSet.isClosed());
+        assertThat(resultSet.isClosed(), is(true));
     }
     
     @Test
@@ -80,35 +78,35 @@ class DistSQLResultSetTest {
     
     @Test
     void assertGetMetaData() {
-        assertNotNull(resultSet.getMetaData());
+        assertThat(resultSet.getMetaData(), is(notNullValue()));
     }
     
     @Test
     void assertWasNull() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         resultSet.getString(1);
-        assertFalse(resultSet.wasNull());
+        assertThat(resultSet.wasNull(), is(false));
     }
     
     @Test
     void assertGetStringByColumnIndex() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getString(1), is("row1_name"));
         assertThat(resultSet.getString(2), is("row1_value"));
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getString(1), is("row2_name"));
     }
     
     @Test
     void assertGetStringByColumnLabel() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getString("name"), is("row1_name"));
         assertThat(resultSet.getString("value"), is("row1_value"));
     }
     
     @Test
     void assertGetNString() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getNString(1), is("row1_name"));
         assertThat(resultSet.getNString("name"), is("row1_name"));
     }
@@ -118,7 +116,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("42"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getByte(1), is((byte) 42));
         assertThat(numericResultSet.getByte("num"), is((byte) 42));
     }
@@ -128,7 +126,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("1000"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getShort(1), is((short) 1000));
         assertThat(numericResultSet.getShort("num"), is((short) 1000));
     }
@@ -138,7 +136,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("100000"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getInt(1), is(100000));
         assertThat(numericResultSet.getInt("num"), is(100000));
     }
@@ -148,7 +146,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("9999999999"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getLong(1), is(9999999999L));
         assertThat(numericResultSet.getLong("num"), is(9999999999L));
     }
@@ -158,7 +156,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("3.14"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getFloat(1), is(3.14F));
         assertThat(numericResultSet.getFloat("num"), is(3.14F));
     }
@@ -168,7 +166,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("3.14159265"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getDouble(1), is(3.14159265D));
         assertThat(numericResultSet.getDouble("num"), is(3.14159265D));
     }
@@ -178,7 +176,7 @@ class DistSQLResultSetTest {
         List<String> columnNames = Collections.singletonList("num");
         List<LocalDataQueryResultRow> rows = Collections.singletonList(new LocalDataQueryResultRow("123.456"));
         DistSQLResultSet numericResultSet = new DistSQLResultSet(columnNames, rows, statement);
-        assertTrue(numericResultSet.next());
+        assertThat(numericResultSet.next(), is(true));
         assertThat(numericResultSet.getBigDecimal(1), is(new BigDecimal("123.456")));
         assertThat(numericResultSet.getBigDecimal("num"), is(new BigDecimal("123.456")));
         assertThat(numericResultSet.getBigDecimal(1, 2), is(new BigDecimal("123.456").setScale(2, RoundingMode.HALF_UP)));
@@ -187,14 +185,14 @@ class DistSQLResultSetTest {
     
     @Test
     void assertGetBytes() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getBytes(1), is("row1_name".getBytes(StandardCharsets.UTF_8)));
         assertThat(resultSet.getBytes("name"), is("row1_name".getBytes(StandardCharsets.UTF_8)));
     }
     
     @Test
     void assertGetObject() {
-        assertTrue(resultSet.next());
+        assertThat(resultSet.next(), is(true));
         assertThat(resultSet.getObject(1), is("row1_name"));
         assertThat(resultSet.getObject("name"), is("row1_name"));
     }
@@ -234,6 +232,6 @@ class DistSQLResultSetTest {
     @Test
     void assertNextReturnsFalseWhenClosed() {
         resultSet.close();
-        assertFalse(resultSet.next());
+        assertThat(resultSet.next(), is(false));
     }
 }
