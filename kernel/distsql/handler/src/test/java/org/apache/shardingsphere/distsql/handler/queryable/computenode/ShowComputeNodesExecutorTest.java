@@ -27,19 +27,13 @@ import org.apache.shardingsphere.infra.instance.metadata.jdbc.JDBCInstanceMetaDa
 import org.apache.shardingsphere.infra.instance.metadata.proxy.ProxyInstanceMetaData;
 import org.apache.shardingsphere.infra.merge.result.impl.local.LocalDataQueryResultRow;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.infra.state.instance.InstanceStateContext;
 import org.apache.shardingsphere.infra.util.eventbus.EventBusContext;
 import org.apache.shardingsphere.mode.manager.ContextManager;
-import org.apache.shardingsphere.mode.manager.cluster.persist.facade.ClusterPersistServiceFacade;
-import org.apache.shardingsphere.mode.manager.standalone.persist.facade.StandalonePersistServiceFacade;
-import org.apache.shardingsphere.mode.metadata.manager.MetaDataContextManager;
-import org.apache.shardingsphere.mode.repository.standalone.StandalonePersistRepositoryConfiguration;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Properties;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -60,12 +54,10 @@ class ShowComputeNodesExecutorTest {
     @Test
     void assertExecuteWithStandaloneMode() {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
-        ComputeNodeInstanceContext computeNodeInstanceContext = createStandaloneInstanceContext();
+        ComputeNodeInstance computeNodeInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("foo", "127.0.0.1@3308", "foo_version"));
+        ComputeNodeInstanceContext computeNodeInstanceContext = createStandaloneInstanceContext(computeNodeInstance);
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(computeNodeInstanceContext);
-        MetaDataContextManager metaDataContextManager = mock(MetaDataContextManager.class, RETURNS_DEEP_STUBS);
-        when(metaDataContextManager.getComputeNodeInstanceContext()).thenReturn(computeNodeInstanceContext);
-        StandalonePersistServiceFacade standalonePersistServiceFacade = new StandalonePersistServiceFacade(metaDataContextManager);
-        when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(standalonePersistServiceFacade);
+        when(contextManager.getPersistServiceFacade().getModeFacade().getComputeNodeService().loadAllInstances()).thenReturn(Collections.singleton(computeNodeInstance));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodesStatement.class), contextManager);
         assertThat(actual.size(), is(1));
         LocalDataQueryResultRow row = actual.iterator().next();
@@ -75,26 +67,27 @@ class ShowComputeNodesExecutorTest {
         assertThat(row.getCell(4), is("3308"));
         assertThat(row.getCell(5), is("OK"));
         assertThat(row.getCell(6), is("Standalone"));
-        assertThat(row.getCell(7), is("0"));
+        assertThat(row.getCell(7), is("-1"));
         assertThat(row.getCell(8), is(""));
         assertThat(row.getCell(9), is("foo_version"));
         assertThat(row.getCell(10), is(""));
     }
     
-    private ComputeNodeInstanceContext createStandaloneInstanceContext() {
+    private ComputeNodeInstanceContext createStandaloneInstanceContext(final ComputeNodeInstance computeNodeInstance) {
         ComputeNodeInstanceContext result = mock(ComputeNodeInstanceContext.class, RETURNS_DEEP_STUBS);
-        when(result.getInstance().getMetaData()).thenReturn(new ProxyInstanceMetaData("foo", "127.0.0.1@3308", "foo_version"));
-        when(result.getInstance().getState()).thenReturn(new InstanceStateContext());
-        when(result.getModeConfiguration()).thenReturn(new ModeConfiguration("Standalone", new StandalonePersistRepositoryConfiguration("H2", new Properties())));
-        when(result.getInstance().getWorkerId()).thenReturn(0);
+        when(result.getInstance()).thenReturn(computeNodeInstance);
+        when(result.getModeConfiguration()).thenReturn(new ModeConfiguration("Standalone", mock(PersistRepositoryConfiguration.class)));
         return result;
     }
     
     @Test
     void assertExecuteWithClusterMode() {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
-        ComputeNodeInstanceContext computeNodeInstanceContext = createClusterInstanceContext(contextManager);
+        ComputeNodeInstance computeNodeInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("foo", "127.0.0.1@3309", "foo_version"));
+        computeNodeInstance.setWorkerId(1);
+        ComputeNodeInstanceContext computeNodeInstanceContext = createClusterInstanceContext(computeNodeInstance);
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(computeNodeInstanceContext);
+        when(contextManager.getPersistServiceFacade().getModeFacade().getComputeNodeService().loadAllInstances()).thenReturn(Collections.singleton(computeNodeInstance));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodesStatement.class), contextManager);
         assertThat(actual.size(), is(1));
         LocalDataQueryResultRow row = actual.iterator().next();
@@ -110,17 +103,10 @@ class ShowComputeNodesExecutorTest {
         assertThat(row.getCell(10), is(""));
     }
     
-    private ComputeNodeInstanceContext createClusterInstanceContext(final ContextManager contextManager) {
+    private ComputeNodeInstanceContext createClusterInstanceContext(final ComputeNodeInstance computeNodeInstance) {
         ComputeNodeInstanceContext result = mock(ComputeNodeInstanceContext.class, RETURNS_DEEP_STUBS);
         when(result.getModeConfiguration()).thenReturn(new ModeConfiguration("Cluster", mock(PersistRepositoryConfiguration.class)));
-        ComputeNodeInstance computeNodeInstance = mock(ComputeNodeInstance.class, RETURNS_DEEP_STUBS);
-        when(computeNodeInstance.getMetaData()).thenReturn(new ProxyInstanceMetaData("foo", "127.0.0.1@3309", "foo_version"));
-        when(computeNodeInstance.getState()).thenReturn(new InstanceStateContext());
-        when(computeNodeInstance.getWorkerId()).thenReturn(1);
         when(result.getClusterInstanceRegistry().getAllClusterInstances()).thenReturn(Collections.singleton(computeNodeInstance));
-        ClusterPersistServiceFacade clusterPersistServiceFacade = mock(ClusterPersistServiceFacade.class, RETURNS_DEEP_STUBS);
-        when(clusterPersistServiceFacade.getComputeNodeService().loadAllInstances()).thenReturn(Collections.singleton(computeNodeInstance));
-        when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(clusterPersistServiceFacade);
         return result;
     }
     

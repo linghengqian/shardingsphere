@@ -51,7 +51,7 @@ class RefreshTableMetaDataExecutorTest {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         ShardingSphereDatabase database = mockDatabase();
         executor.setDatabase(database);
-        executor.executeUpdate(new RefreshTableMetaDataStatement("foo_schema", "foo_table", "foo_ds"), contextManager);
+        executor.executeUpdate(new RefreshTableMetaDataStatement("foo_table", "foo_ds", "foo_schema"), contextManager);
         verify(contextManager).reloadTable(database, "foo_schema", "foo_ds", "foo_table");
     }
     
@@ -61,7 +61,7 @@ class RefreshTableMetaDataExecutorTest {
         ShardingSphereDatabase database = mockDatabase();
         when(database.containsSchema("missing")).thenReturn(false);
         executor.setDatabase(database);
-        assertThrows(SchemaNotFoundException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("missing", "foo_table", "foo_ds"), contextManager));
+        assertThrows(SchemaNotFoundException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_table", "foo_ds", "missing"), contextManager));
     }
     
     @Test
@@ -70,7 +70,7 @@ class RefreshTableMetaDataExecutorTest {
         ShardingSphereDatabase database = mockDatabase();
         when(database.getSchema("foo_schema").containsTable("missing")).thenReturn(false);
         executor.setDatabase(database);
-        assertThrows(TableNotFoundException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_schema", "missing", null), contextManager));
+        assertThrows(TableNotFoundException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("missing", null, "foo_schema"), contextManager));
     }
     
     @Test
@@ -78,23 +78,32 @@ class RefreshTableMetaDataExecutorTest {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         ShardingSphereDatabase database = mockDatabase();
         executor.setDatabase(database);
-        assertThrows(MissingRequiredStorageUnitsException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_schema", "foo_table", "missing"), contextManager));
+        assertThrows(MissingRequiredStorageUnitsException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_table", "missing", "foo_schema"), contextManager));
     }
     
     @Test
     void assertExecuteWithEmptyStorageUnits() {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
-        ShardingSphereDatabase database = mockDatabase();
-        when(database.getResourceMetaData().getStorageUnits()).thenReturn(Collections.emptyMap());
+        ShardingSphereDatabase database = mock(ShardingSphereDatabase.class, RETURNS_DEEP_STUBS);
+        ResourceMetaData resourceMetaData = new ResourceMetaData(Collections.emptyMap(), Collections.emptyMap());
+        when(database.getResourceMetaData()).thenReturn(resourceMetaData);
+        when(database.getName()).thenReturn("foo_db");
+        when(database.getProtocolType()).thenReturn(mock(DatabaseType.class));
         executor.setDatabase(database);
-        assertThrows(EmptyStorageUnitException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_schema", "foo_table", null), contextManager));
+        assertThrows(EmptyStorageUnitException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_table", null, "foo_schema"), contextManager));
     }
     
     private ShardingSphereDatabase mockDatabase() {
-        StorageUnit storageUnit = mock(StorageUnit.class, RETURNS_DEEP_STUBS);
-        Map<String, StorageUnit> storageUnits = new HashMap<>();
-        storageUnits.put("foo_ds", storageUnit);
-        ResourceMetaData resourceMetaData = new ResourceMetaData(storageUnits);
+        return mockDatabase(new HashMap<>());
+    }
+    
+    private ShardingSphereDatabase mockDatabase(final Map<String, StorageUnit> storageUnits) {
+        Map<String, StorageUnit> mutableStorageUnits = new HashMap<>(storageUnits);
+        if (mutableStorageUnits.isEmpty()) {
+            StorageUnit storageUnit = mock(StorageUnit.class, RETURNS_DEEP_STUBS);
+            mutableStorageUnits.put("foo_ds", storageUnit);
+        }
+        ResourceMetaData resourceMetaData = new ResourceMetaData(Collections.emptyMap(), mutableStorageUnits);
         ShardingSphereSchema schema = mock(ShardingSphereSchema.class, RETURNS_DEEP_STUBS);
         when(schema.containsTable("foo_table")).thenReturn(true);
         when(schema.getTable("foo_table")).thenReturn(mock(ShardingSphereTable.class, RETURNS_DEEP_STUBS));

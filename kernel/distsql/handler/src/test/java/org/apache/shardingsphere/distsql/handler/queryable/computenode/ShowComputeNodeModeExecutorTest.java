@@ -50,13 +50,15 @@ class ShowComputeNodeModeExecutorTest {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         Properties props = new Properties();
         props.setProperty("server-lists", "127.0.0.1:2181");
-        PersistRepositoryConfiguration repositoryConfig = new PersistRepositoryConfiguration("ZooKeeper", props);
+        PersistRepositoryConfiguration repositoryConfig = mock(PersistRepositoryConfiguration.class);
+        when(repositoryConfig.getType()).thenReturn("ZooKeeper");
+        when(repositoryConfig.getProps()).thenReturn(props);
         when(contextManager.getComputeNodeInstanceContext().getModeConfiguration()).thenReturn(new ModeConfiguration("Standalone", repositoryConfig));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodeModeStatement.class), contextManager);
         LocalDataQueryResultRow row = actual.iterator().next();
         assertThat(row.getCell(1), is("Standalone"));
         assertThat(row.getCell(2), is("ZooKeeper"));
-        assertThat(row.getCell(3), is(props));
+        assertThat(row.getCell(3), is("{\"server-lists\":\"127.0.0.1:2181\"}"));
     }
     
     @Test
@@ -66,7 +68,7 @@ class ShowComputeNodeModeExecutorTest {
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodeModeStatement.class), contextManager);
         LocalDataQueryResultRow row = actual.iterator().next();
         assertThat(row.getCell(1), is("Cluster"));
-        assertThat(row.getCell(2), is((Object) null));
-        assertThat(row.getCell(3), is((Object) null));
+        assertThat(row.getCell(2), is(""));
+        assertThat(row.getCell(3), is(""));
     }
 }

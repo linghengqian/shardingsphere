@@ -46,6 +46,7 @@ import org.apache.shardingsphere.infra.executor.sql.execute.result.query.impl.dr
 import org.apache.shardingsphere.infra.executor.sql.prepare.driver.DriverExecutionPrepareEngine;
 import org.apache.shardingsphere.infra.executor.sql.prepare.driver.jdbc.JDBCDriverType;
 import org.apache.shardingsphere.infra.executor.sql.prepare.driver.jdbc.StatementOption;
+import org.apache.shardingsphere.infra.executor.sql.process.ProcessEngine;
 import org.apache.shardingsphere.infra.hint.HintValueContext;
 import org.apache.shardingsphere.infra.merge.result.impl.local.LocalDataQueryResultRow;
 import org.apache.shardingsphere.infra.metadata.ShardingSphereMetaData;
@@ -133,14 +134,14 @@ public final class PreviewExecutor implements DistSQLQueryExecutor<PreviewStatem
     private Collection<ExecutionUnit> getFederationExecutionUnits(final QueryContext queryContext, final ShardingSphereMetaData metaData, final SQLFederationEngine federationEngine) {
         SQLStatement sqlStatement = queryContext.getSqlStatementContext().getSqlStatement();
         DriverExecutionPrepareEngine<JDBCExecutionUnit, Connection> prepareEngine = createDriverExecutionPrepareEngine(metaData);
-        String processId = newProcessId(metaData, queryContext);
+        String processId = newProcessId(queryContext);
         SQLFederationContext context = new SQLFederationContext(true, queryContext, metaData, processId);
         federationEngine.executeQuery(prepareEngine, createPreviewCallback(sqlStatement), context);
         return context.getPreviewExecutionUnits();
     }
     
-    private String newProcessId(final ShardingSphereMetaData metaData, final QueryContext queryContext) {
-        return metaData.getProcessEngine().connect(queryContext.getUsedDatabase().getName(), queryContext.getConnectionContext().getGrantee());
+    private String newProcessId(final QueryContext queryContext) {
+        return new ProcessEngine().connect(queryContext.getUsedDatabase().getName(), queryContext.getConnectionContext().getGrantee());
     }
     
     private JDBCExecutorCallback<ExecuteResult> createPreviewCallback(final SQLStatement sqlStatement) {

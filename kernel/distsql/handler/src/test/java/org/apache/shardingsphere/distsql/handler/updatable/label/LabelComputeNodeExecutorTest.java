@@ -48,7 +48,7 @@ class LabelComputeNodeExecutorTest {
         when(instanceContext.getClusterInstanceRegistry().find("foo")).thenReturn(Optional.of(computeNodeInstance));
         ClusterPersistServiceFacade clusterPersistServiceFacade = mock(ClusterPersistServiceFacade.class, RETURNS_DEEP_STUBS);
         when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(clusterPersistServiceFacade);
-        executor.executeUpdate(new LabelComputeNodeStatement("foo", Collections.singleton("new"), true), contextManager);
+        executor.executeUpdate(new LabelComputeNodeStatement(true, "foo", Collections.singleton("new")), contextManager);
         verify(clusterPersistServiceFacade.getComputeNodeService()).persistLabels("foo", Collections.singletonList("new"));
     }
     
@@ -62,7 +62,7 @@ class LabelComputeNodeExecutorTest {
         when(instanceContext.getClusterInstanceRegistry().find("foo")).thenReturn(Optional.of(computeNodeInstance));
         ClusterPersistServiceFacade clusterPersistServiceFacade = mock(ClusterPersistServiceFacade.class, RETURNS_DEEP_STUBS);
         when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(clusterPersistServiceFacade);
-        executor.executeUpdate(new LabelComputeNodeStatement("foo", Collections.singleton("new"), false), contextManager);
+        executor.executeUpdate(new LabelComputeNodeStatement(false, "foo", Collections.singleton("new")), contextManager);
         verify(clusterPersistServiceFacade.getComputeNodeService()).persistLabels("foo", Arrays.asList("new", "existing"));
     }
 }

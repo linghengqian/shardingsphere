@@ -82,12 +82,13 @@ class ShowDistVariableExecutorTest {
     
     @Test
     void assertShowTemporaryPropsVariable() {
-        when(contextManager.getMetaDataContexts().getMetaData().getTemporaryProps()).thenReturn(new TemporaryConfigurationProperties(PropertiesBuilder.build(new Property("sql-federation-enabled", Boolean.TRUE.toString()))));
+        when(contextManager.getMetaDataContexts().getMetaData().getTemporaryProps()).thenReturn(
+                new TemporaryConfigurationProperties(PropertiesBuilder.build(new Property("proxy-meta-data-collector-enabled", Boolean.TRUE.toString()))));
         ShowDistVariableExecutor executor = new ShowDistVariableExecutor();
-        Collection<LocalDataQueryResultRow> actual = executor.getRows(new ShowDistVariableStatement("SQL_FEDERATION_ENABLED"), contextManager);
+        Collection<LocalDataQueryResultRow> actual = executor.getRows(new ShowDistVariableStatement("PROXY_META_DATA_COLLECTOR_ENABLED"), contextManager);
         assertThat(actual.size(), is(1));
         LocalDataQueryResultRow row = actual.iterator().next();
-        assertThat(row.getCell(1), is("sql_federation_enabled"));
+        assertThat(row.getCell(1), is("proxy_meta_data_collector_enabled"));
         assertThat(row.getCell(2), is("true"));
     }
     

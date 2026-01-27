@@ -23,7 +23,6 @@ import org.apache.shardingsphere.infra.instance.ComputeNodeInstance;
 import org.apache.shardingsphere.infra.instance.ComputeNodeInstanceContext;
 import org.apache.shardingsphere.infra.instance.metadata.proxy.ProxyInstanceMetaData;
 import org.apache.shardingsphere.infra.state.instance.InstanceState;
-import org.apache.shardingsphere.infra.state.instance.InstanceStateContext;
 import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.apache.shardingsphere.mode.manager.cluster.persist.facade.ClusterPersistServiceFacade;
 import org.junit.jupiter.api.Test;
@@ -48,11 +47,10 @@ class SetComputeNodeStateExecutorTest {
         ComputeNodeInstance currentInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("current", "127.0.0.1@3307", "version"));
         when(instanceContext.getInstance()).thenReturn(currentInstance);
         ComputeNodeInstance targetInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("target", "127.0.0.1@3308", "version"));
-        targetInstance.setState(new InstanceStateContext());
         when(instanceContext.getClusterInstanceRegistry().find("target")).thenReturn(Optional.of(targetInstance));
         ClusterPersistServiceFacade clusterPersistServiceFacade = mock(ClusterPersistServiceFacade.class, RETURNS_DEEP_STUBS);
         when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(clusterPersistServiceFacade);
-        executor.executeUpdate(new SetComputeNodeStateStatement("target", "DISABLE"), contextManager);
+        executor.executeUpdate(new SetComputeNodeStateStatement("DISABLE", "target"), contextManager);
         verify(clusterPersistServiceFacade.getComputeNodeService()).updateState("target", InstanceState.CIRCUIT_BREAK);
     }
     
@@ -63,7 +61,7 @@ class SetComputeNodeStateExecutorTest {
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(instanceContext);
         ComputeNodeInstance currentInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("current", "127.0.0.1@3307", "version"));
         when(instanceContext.getInstance()).thenReturn(currentInstance);
-        assertThrows(UnsupportedSQLOperationException.class, () -> executor.executeUpdate(new SetComputeNodeStateStatement("current", "DISABLE"), contextManager));
+        assertThrows(UnsupportedSQLOperationException.class, () -> executor.executeUpdate(new SetComputeNodeStateStatement("DISABLE", "current"), contextManager));
     }
     
     @Test
@@ -72,11 +70,10 @@ class SetComputeNodeStateExecutorTest {
         ComputeNodeInstanceContext instanceContext = mock(ComputeNodeInstanceContext.class, RETURNS_DEEP_STUBS);
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(instanceContext);
         ComputeNodeInstance targetInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("target", "127.0.0.1@3308", "version"));
-        targetInstance.setState(new InstanceStateContext());
         when(instanceContext.getClusterInstanceRegistry().find("target")).thenReturn(Optional.of(targetInstance));
         ClusterPersistServiceFacade clusterPersistServiceFacade = mock(ClusterPersistServiceFacade.class, RETURNS_DEEP_STUBS);
         when(contextManager.getPersistServiceFacade().getModeFacade()).thenReturn(clusterPersistServiceFacade);
-        executor.executeUpdate(new SetComputeNodeStateStatement("target", "ENABLE"), contextManager);
+        executor.executeUpdate(new SetComputeNodeStateStatement("ENABLE", "target"), contextManager);
         verify(clusterPersistServiceFacade.getComputeNodeService()).updateState("target", InstanceState.OK);
     }
     
@@ -86,6 +83,6 @@ class SetComputeNodeStateExecutorTest {
         ComputeNodeInstanceContext instanceContext = mock(ComputeNodeInstanceContext.class, RETURNS_DEEP_STUBS);
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(instanceContext);
         when(instanceContext.getClusterInstanceRegistry().find("missing")).thenReturn(Optional.empty());
-        assertThrows(UnsupportedSQLOperationException.class, () -> executor.executeUpdate(new SetComputeNodeStateStatement("missing", "ENABLE"), contextManager));
+        assertThrows(UnsupportedSQLOperationException.class, () -> executor.executeUpdate(new SetComputeNodeStateStatement("ENABLE", "missing"), contextManager));
     }
 }

@@ -27,7 +27,6 @@ import org.apache.shardingsphere.infra.instance.metadata.jdbc.JDBCInstanceMetaDa
 import org.apache.shardingsphere.infra.instance.metadata.proxy.ProxyInstanceMetaData;
 import org.apache.shardingsphere.infra.merge.result.impl.local.LocalDataQueryResultRow;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
-import org.apache.shardingsphere.infra.state.instance.InstanceStateContext;
 import org.apache.shardingsphere.infra.util.eventbus.EventBusContext;
 import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.junit.jupiter.api.Test;
@@ -64,7 +63,7 @@ class ShowComputeNodeInfoExecutorTest {
         assertThat(row.getCell(3), is("3308"));
         assertThat(row.getCell(4), is("OK"));
         assertThat(row.getCell(5), is("Standalone"));
-        assertThat(row.getCell(6), is("0"));
+        assertThat(row.getCell(6), is("-1"));
         assertThat(row.getCell(7), is(""));
         assertThat(row.getCell(8), is("foo_version"));
     }
@@ -72,7 +71,6 @@ class ShowComputeNodeInfoExecutorTest {
     private ComputeNodeInstanceContext createProxyInstanceContext() {
         ComputeNodeInstanceContext result = mock(ComputeNodeInstanceContext.class, RETURNS_DEEP_STUBS);
         ComputeNodeInstance computeNodeInstance = new ComputeNodeInstance(new ProxyInstanceMetaData("foo", "127.0.0.1@3308", "foo_version"));
-        computeNodeInstance.setState(new InstanceStateContext());
         when(result.getInstance()).thenReturn(computeNodeInstance);
         when(result.getModeConfiguration()).thenReturn(new ModeConfiguration("Standalone", mock(PersistRepositoryConfiguration.class)));
         return result;
@@ -82,9 +80,8 @@ class ShowComputeNodeInfoExecutorTest {
     void assertExecuteWithJdbcInstance() {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         ComputeNodeInstance computeNodeInstance = new ComputeNodeInstance(new JDBCInstanceMetaData("jdbc_instance", "192.168.0.1", "jdbc_version", "logic_db"));
-        computeNodeInstance.setState(new InstanceStateContext());
         computeNodeInstance.setWorkerId(1);
-        ComputeNodeInstanceContext computeNodeInstanceContext = new ComputeNodeInstanceContext(computeNodeInstance, new ModeConfiguration("Cluster", mock()), new EventBusContext());
+        ComputeNodeInstanceContext computeNodeInstanceContext = new ComputeNodeInstanceContext(computeNodeInstance, new ModeConfiguration("Cluster", mock(PersistRepositoryConfiguration.class)), new EventBusContext());
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(computeNodeInstanceContext);
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodeInfoStatement.class), contextManager);
         LocalDataQueryResultRow row = actual.iterator().next();

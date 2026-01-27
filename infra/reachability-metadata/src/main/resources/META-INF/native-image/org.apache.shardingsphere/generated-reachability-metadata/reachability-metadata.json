@@ -6101,7 +6101,7 @@
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.computenode.SetComputeNodeStateExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.computenode.SetComputeNodeStateExecutor"
     },
     {
       "condition": {
@@ -6119,13 +6119,13 @@
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.label.LabelComputeNodeExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.label.LabelComputeNodeExecutor"
     },
     {
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.label.UnlabelComputeNodeExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.label.UnlabelComputeNodeExecutor"
     },
     {
       "condition": {
@@ -6143,19 +6143,19 @@
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.refresh.RefreshDatabaseMetaDataExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.refresh.RefreshDatabaseMetaDataExecutor"
     },
     {
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.refresh.RefreshTableMetaDataExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.refresh.RefreshTableMetaDataExecutor"
     },
     {
       "condition": {
         "typeReached": "org.apache.shardingsphere.proxy.frontend.postgresql.command.query.extended.Portal"
       },
-      "type": "org.apache.shardingsphere.proxy.backend.handler.distsql.ral.updatable.variable.SetDistVariableExecutor"
+      "type": "org.apache.shardingsphere.distsql.handler.updatable.variable.SetDistVariableExecutor"
     },
     {
       "condition": {
