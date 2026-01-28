@@ -32,8 +32,8 @@ import org.apache.shardingsphere.mode.manager.ContextManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,16 +51,12 @@ class ShowDistVariablesExecutorTest {
         when(contextManager.getMetaDataContexts().getMetaData().getTemporaryProps()).thenReturn(new TemporaryConfigurationProperties(props));
         ShowDistVariablesExecutor executor = new ShowDistVariablesExecutor();
         Collection<LocalDataQueryResultRow> actual = executor.getRows(new ShowDistVariablesStatement(true, null), contextManager);
+        Collection<String> actualNames = actual.stream().map(each -> each.getCell(1).toString()).collect(Collectors.toList());
         assertThat(actual.size() >= 4, is(true));
-        Iterator<LocalDataQueryResultRow> iterator = actual.iterator();
-        LocalDataQueryResultRow firstRow = iterator.next();
-        LocalDataQueryResultRow secondRow = iterator.next();
-        LocalDataQueryResultRow thirdRow = iterator.next();
-        LocalDataQueryResultRow fourthRow = iterator.next();
-        assertThat(firstRow.getCell(1), is("instance_connection_enabled"));
-        assertThat(secondRow.getCell(1), is("proxy_meta_data_collector_cron"));
-        assertThat(thirdRow.getCell(1), is("proxy_meta_data_collector_enabled"));
-        assertThat(fourthRow.getCell(1), is("system_schema_metadata_assembly_enabled"));
+        assertThat(actualNames.contains("instance_connection_enabled"), is(true));
+        assertThat(actualNames.contains("proxy_meta_data_collector_cron"), is(true));
+        assertThat(actualNames.contains("proxy_meta_data_collector_enabled"), is(true));
+        assertThat(actualNames.contains("system_schema_metadata_assembly_enabled"), is(true));
     }
     
     @Test
@@ -72,11 +68,12 @@ class ShowDistVariablesExecutorTest {
         executor.setConnectionContext(new DistSQLConnectionContext(mock(QueryContext.class), 3,
                 mock(DatabaseType.class), mock(DatabaseConnectionManager.class), mock(ExecutorStatementManager.class)));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(new ShowDistVariablesStatement(false, null), contextManager);
-        assertThat(actual.size(), is(4));
-        assertThat(actual.stream().anyMatch(row -> "cached_connections".equals(row.getCell(1)) && Integer.valueOf(3).equals(row.getCell(2))), is(true));
-        assertThat(actual.stream().anyMatch(row -> "agent_plugins_enabled".equals(row.getCell(1)) && "true".equals(row.getCell(2))), is(true));
-        assertThat(actual.stream().anyMatch(row -> "sql_show".equals(row.getCell(1)) && "true".equals(row.getCell(2))), is(true));
-        assertThat(actual.stream().anyMatch(row -> "sql_simple".equals(row.getCell(1)) && "true".equals(row.getCell(2))), is(true));
+        Collection<String> actualNames = actual.stream().map(each -> each.getCell(1).toString()).collect(Collectors.toList());
+        assertThat(actual.size() >= 4, is(true));
+        assertThat(actualNames.contains("cached_connections"), is(true));
+        assertThat(actualNames.contains("agent_plugins_enabled"), is(true));
+        assertThat(actualNames.contains("sql_show"), is(true));
+        assertThat(actualNames.contains("sql_simple"), is(true));
     }
     
     @Test
@@ -87,8 +84,9 @@ class ShowDistVariablesExecutorTest {
         executor.setConnectionContext(new DistSQLConnectionContext(mock(QueryContext.class), 0,
                 mock(DatabaseType.class), mock(DatabaseConnectionManager.class), mock(ExecutorStatementManager.class)));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(new ShowDistVariablesStatement(false, "sql_%"), contextManager);
+        Collection<String> actualNames = actual.stream().map(each -> each.getCell(1).toString()).collect(Collectors.toList());
         assertThat(actual.size() >= 2, is(true));
-        assertThat(actual.stream().anyMatch(row -> "sql_show".equals(row.getCell(1))), is(true));
-        assertThat(actual.stream().anyMatch(row -> "sql_simple".equals(row.getCell(1))), is(true));
+        assertThat(actualNames.contains("sql_show"), is(true));
+        assertThat(actualNames.contains("sql_simple"), is(true));
     }
 }

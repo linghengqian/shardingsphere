@@ -83,12 +83,12 @@ class RefreshTableMetaDataExecutorTest {
     
     @Test
     void assertExecuteWithEmptyStorageUnits() {
-        ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         ShardingSphereDatabase database = mock(ShardingSphereDatabase.class, RETURNS_DEEP_STUBS);
         ResourceMetaData resourceMetaData = new ResourceMetaData(Collections.emptyMap(), Collections.emptyMap());
         when(database.getResourceMetaData()).thenReturn(resourceMetaData);
         when(database.getName()).thenReturn("foo_db");
         when(database.getProtocolType()).thenReturn(mock(DatabaseType.class));
+        ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         executor.setDatabase(database);
         assertThrows(EmptyStorageUnitException.class, () -> executor.executeUpdate(new RefreshTableMetaDataStatement("foo_table", null, "foo_schema"), contextManager));
     }

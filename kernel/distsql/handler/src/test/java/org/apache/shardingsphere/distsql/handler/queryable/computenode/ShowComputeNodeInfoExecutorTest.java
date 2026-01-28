@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -81,7 +80,8 @@ class ShowComputeNodeInfoExecutorTest {
         ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         ComputeNodeInstance computeNodeInstance = new ComputeNodeInstance(new JDBCInstanceMetaData("jdbc_instance", "192.168.0.1", "jdbc_version", "logic_db"));
         computeNodeInstance.setWorkerId(1);
-        ComputeNodeInstanceContext computeNodeInstanceContext = new ComputeNodeInstanceContext(computeNodeInstance, new ModeConfiguration("Cluster", mock(PersistRepositoryConfiguration.class)), new EventBusContext());
+        ComputeNodeInstanceContext computeNodeInstanceContext =
+                new ComputeNodeInstanceContext(computeNodeInstance, new ModeConfiguration("Cluster", mock(PersistRepositoryConfiguration.class)), new EventBusContext());
         when(contextManager.getComputeNodeInstanceContext()).thenReturn(computeNodeInstanceContext);
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodeInfoStatement.class), contextManager);
         LocalDataQueryResultRow row = actual.iterator().next();

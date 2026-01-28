@@ -47,12 +47,12 @@ class ShowComputeNodeModeExecutorTest {
     
     @Test
     void assertExecuteWithStandaloneMode() {
-        ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         Properties props = new Properties();
         props.setProperty("server-lists", "127.0.0.1:2181");
         PersistRepositoryConfiguration repositoryConfig = mock(PersistRepositoryConfiguration.class);
         when(repositoryConfig.getType()).thenReturn("ZooKeeper");
         when(repositoryConfig.getProps()).thenReturn(props);
+        ContextManager contextManager = mock(ContextManager.class, RETURNS_DEEP_STUBS);
         when(contextManager.getComputeNodeInstanceContext().getModeConfiguration()).thenReturn(new ModeConfiguration("Standalone", repositoryConfig));
         Collection<LocalDataQueryResultRow> actual = executor.getRows(mock(ShowComputeNodeModeStatement.class), contextManager);
         LocalDataQueryResultRow row = actual.iterator().next();
