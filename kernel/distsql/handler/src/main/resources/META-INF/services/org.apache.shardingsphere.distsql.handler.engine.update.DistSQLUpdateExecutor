@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-org.apache.shardingsphere.distsql.handler.updatable.computenode.SetComputeNodeStateExecutor
-org.apache.shardingsphere.distsql.handler.updatable.label.LabelComputeNodeExecutor
-org.apache.shardingsphere.distsql.handler.updatable.label.UnlabelComputeNodeExecutor
-org.apache.shardingsphere.distsql.handler.updatable.refresh.RefreshDatabaseMetaDataExecutor
-org.apache.shardingsphere.distsql.handler.updatable.refresh.RefreshTableMetaDataExecutor
-org.apache.shardingsphere.distsql.handler.updatable.variable.SetDistVariableExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.computenode.SetComputeNodeStateExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.label.LabelComputeNodeExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.label.UnlabelComputeNodeExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.refresh.RefreshDatabaseMetaDataExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.refresh.RefreshTableMetaDataExecutor
+org.apache.shardingsphere.distsql.handler.ral.updatable.variable.SetDistVariableExecutor

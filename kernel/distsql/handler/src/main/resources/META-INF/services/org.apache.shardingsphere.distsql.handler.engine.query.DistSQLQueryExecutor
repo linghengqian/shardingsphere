@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-org.apache.shardingsphere.distsql.handler.queryable.computenode.ShowComputeNodesExecutor
-org.apache.shardingsphere.distsql.handler.queryable.computenode.ShowComputeNodeInfoExecutor
-org.apache.shardingsphere.distsql.handler.queryable.computenode.ShowComputeNodeModeExecutor
-org.apache.shardingsphere.distsql.handler.queryable.variable.ShowDistVariableExecutor
-org.apache.shardingsphere.distsql.handler.queryable.variable.ShowDistVariablesExecutor
-org.apache.shardingsphere.distsql.handler.queryable.rul.ParseDistSQLExecutor
-org.apache.shardingsphere.distsql.handler.queryable.rul.PreviewExecutor
+org.apache.shardingsphere.distsql.handler.ral.queryable.computenode.ShowComputeNodesExecutor
+org.apache.shardingsphere.distsql.handler.ral.queryable.computenode.ShowComputeNodeInfoExecutor
+org.apache.shardingsphere.distsql.handler.ral.queryable.computenode.ShowComputeNodeModeExecutor
+org.apache.shardingsphere.distsql.handler.ral.queryable.variable.ShowDistVariableExecutor
+org.apache.shardingsphere.distsql.handler.ral.queryable.variable.ShowDistVariablesExecutor
+org.apache.shardingsphere.distsql.handler.rul.ParseDistSQLExecutor
+org.apache.shardingsphere.distsql.handler.rul.PreviewExecutor
