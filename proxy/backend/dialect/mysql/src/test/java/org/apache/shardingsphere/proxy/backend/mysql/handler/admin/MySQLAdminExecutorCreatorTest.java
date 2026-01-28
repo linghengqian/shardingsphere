@@ -34,6 +34,7 @@ import org.apache.shardingsphere.mode.metadata.MetaDataContexts;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseMetaDataExecutor;
 import org.apache.shardingsphere.proxy.backend.handler.admin.executor.DatabaseAdminExecutor;
+import org.apache.shardingsphere.infra.metadata.database.schema.manager.SystemSchemaManager;
 import org.apache.shardingsphere.proxy.backend.mysql.handler.admin.executor.MySQLSetVariableAdminExecutor;
 import org.apache.shardingsphere.proxy.backend.mysql.handler.admin.executor.MySQLSystemVariableQueryExecutor;
 import org.apache.shardingsphere.proxy.backend.mysql.handler.admin.executor.show.MySQLShowCreateDatabaseExecutor;
@@ -73,6 +74,7 @@ import org.apache.shardingsphere.test.infra.framework.extension.mock.StaticMockS
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -315,7 +317,8 @@ class MySQLAdminExecutorCreatorTest {
     }
     
     @Test
-    void assertCreateWithSelectStatementFromInformationSchemaOfDefaultExecutorTables() {
+    void assertCreateWithSelectStatementFromInformationSchemaOfDefaultExecutorTables() throws SQLException {
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("information_schema", Collections.singletonList("ENGINES"));
         ShardingSphereDatabase database = mock(ShardingSphereDatabase.class);
         when(database.getName()).thenReturn("information_schema");
         when(database.getProtocolType()).thenReturn(databaseType);

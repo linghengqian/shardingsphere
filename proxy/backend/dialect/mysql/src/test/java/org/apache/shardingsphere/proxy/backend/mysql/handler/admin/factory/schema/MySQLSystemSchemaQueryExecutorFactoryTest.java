@@ -116,6 +116,7 @@ class MySQLSystemSchemaQueryExecutorFactoryTest {
     
     @Test
     void assertNewInstanceWithCreateSystemTableExecutor() {
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("mysql", Collections.singletonList("db"));
         SelectStatement selectStatement = mock(SelectStatement.class);
         when(selectStatement.getFrom()).thenReturn(Optional.of(new SimpleTableSegment(new TableNameSegment(0, 0, new IdentifierValue("db")))));
         SelectStatementContext selectStatementContext = mock(SelectStatementContext.class);

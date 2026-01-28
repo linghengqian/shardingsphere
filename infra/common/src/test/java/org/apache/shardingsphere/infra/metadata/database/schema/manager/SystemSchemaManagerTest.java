@@ -22,26 +22,20 @@ import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -145,41 +139,14 @@ class SystemSchemaManagerTest {
     }
     
     private void setUpMySQLSystemSchemaDataSource() throws SQLException {
-        GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
-        Connection connection = mock(Connection.class);
-        MockedDataSource dataSource = new MockedDataSource(connection);
-        Map<String, Collection<String>> schemaTables = new LinkedHashMap<>();
-        schemaTables.put("information_schema", Arrays.asList("columns", "tables", "schemata"));
-        schemaTables.put("mysql", Collections.singletonList("db"));
-        schemaTables.put("performance_schema", Collections.singletonList("events_waits_current"));
-        schemaTables.put("sys", Collections.singletonList("sys_config"));
-        AtomicReference<String> schemaNameRef = new AtomicReference<>();
-        PreparedStatement tableStatement = mock(PreparedStatement.class);
-        PreparedStatement typeStatement = mock(PreparedStatement.class);
-        when(connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?")).thenReturn(tableStatement);
-        when(connection.prepareStatement("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?")).thenReturn(typeStatement);
-        doAnswer(invocation -> {
-            schemaNameRef.set(invocation.getArgument(1, String.class));
-            return null;
-        }).when(tableStatement).setString(eq(1), anyString());
-        when(tableStatement.executeQuery()).thenAnswer(invocation -> buildTableResultSet(schemaTables.getOrDefault(schemaNameRef.get(), Collections.emptyList())));
-        when(typeStatement.executeQuery()).thenAnswer(invocation -> buildTableTypeResultSet());
-        GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("information_schema", Arrays.asList("columns", "tables", "schemata"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("mysql", Collections.singletonList("db"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("performance_schema", Collections.singletonList("events_waits_current"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("sys", Collections.singletonList("sys_config"));
     }
     
     private ResultSet buildTableResultSet(final Collection<String> tableNames) throws SQLException {
-        ResultSet result = mock(ResultSet.class);
-        Collection<String> names = new ArrayList<>(tableNames);
-        AtomicReference<String> current = new AtomicReference<>();
-        when(result.next()).thenAnswer(invocation -> {
-            if (names.isEmpty()) {
-                return false;
-            }
-            current.set(names.remove(0));
-            return true;
-        });
-        when(result.getString("TABLE_NAME")).thenAnswer(invocation -> current.get());
-        return result;
+        return SystemSchemaManagerTestSupport.buildTableResultSet(tableNames);
     }
     
     private ResultSet buildTableTypeResultSet() throws SQLException {

@@ -17,21 +17,19 @@
 
 package org.apache.shardingsphere.infra.metadata.database.schema.builder;
 
-import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.config.props.temporary.TemporaryConfigurationPropertyKey;
 import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSphereSchema;
+import org.apache.shardingsphere.infra.metadata.database.schema.manager.SystemSchemaManagerTestSupport;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.infra.util.props.PropertiesBuilder;
 import org.apache.shardingsphere.infra.util.props.PropertiesBuilder.Property;
-import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
@@ -39,8 +37,6 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class SystemSchemaBuilderTest {
     
@@ -115,21 +111,9 @@ class SystemSchemaBuilderTest {
     }
     
     private void setUpMySQLSystemSchemaDataSource() throws SQLException {
-        GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
-        Connection connection = mock(Connection.class);
-        MockedDataSource dataSource = new MockedDataSource(connection);
-        PreparedStatement tableStatement = mock(PreparedStatement.class);
-        PreparedStatement typeStatement = mock(PreparedStatement.class);
-        ResultSet tableResultSet = mock(ResultSet.class);
-        ResultSet typeResultSet = mock(ResultSet.class);
-        when(tableResultSet.next()).thenReturn(true, true, true, false);
-        when(tableResultSet.getString("TABLE_NAME")).thenReturn("columns", "tables", "schemata");
-        when(typeResultSet.next()).thenReturn(true, false);
-        when(typeResultSet.getString("TABLE_TYPE")).thenReturn("BASE TABLE");
-        when(tableStatement.executeQuery()).thenReturn(tableResultSet);
-        when(typeStatement.executeQuery()).thenReturn(typeResultSet);
-        when(connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?")).thenReturn(tableStatement);
-        when(connection.prepareStatement("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?")).thenReturn(typeStatement);
-        GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("information_schema", Arrays.asList("columns", "tables", "schemata"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("mysql", Collections.singletonList("db"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("performance_schema", Collections.singletonList("events_waits_current"));
+        SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("sys", Collections.singletonList("sys_config"));
     }
 }
