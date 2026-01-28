@@ -17,31 +17,48 @@
 
 package org.apache.shardingsphere.infra.metadata.database.schema.manager;
 
+import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
+import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SystemSchemaManagerTest {
     
     @Test
-    void assertValueOfSchemaPathSuccess() {
+    void assertValueOfSchemaPathSuccess() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         Collection<String> actualInformationSchema = SystemSchemaManager.getTables("MySQL", "information_schema");
-        assertThat(actualInformationSchema.size(), is(95));
+        assertThat(actualInformationSchema.size(), is(3));
+        assertTrue(actualInformationSchema.containsAll(Arrays.asList("columns", "tables", "schemata")));
         Collection<String> actualMySQLSchema = SystemSchemaManager.getTables("MySQL", "mysql");
-        assertThat(actualMySQLSchema.size(), is(40));
+        assertThat(actualMySQLSchema, is(Collections.singletonList("db")));
         Collection<String> actualPerformanceSchema = SystemSchemaManager.getTables("MySQL", "performance_schema");
-        assertThat(actualPerformanceSchema.size(), is(114));
+        assertThat(actualPerformanceSchema, is(Collections.singletonList("events_waits_current")));
         Collection<String> actualSysSchema = SystemSchemaManager.getTables("MySQL", "sys");
-        assertThat(actualSysSchema.size(), is(53));
+        assertThat(actualSysSchema, is(Collections.singletonList("sys_config")));
         Collection<String> actualShardingSphereSchema = SystemSchemaManager.getTables("MySQL", "shardingsphere");
         assertThat(actualShardingSphereSchema.size(), is(1));
         Collection<String> actualPgInformationSchema = SystemSchemaManager.getTables("PostgreSQL", "information_schema");
@@ -55,7 +72,8 @@ class SystemSchemaManagerTest {
     }
     
     @Test
-    void assertIsSystemTable() {
+    void assertIsSystemTable() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         assertTrue(SystemSchemaManager.isSystemTable("information_schema", "columns"));
         assertTrue(SystemSchemaManager.isSystemTable("pg_catalog", "pg_database"));
         assertTrue(SystemSchemaManager.isSystemTable("pg_catalog", "pg_tables"));
@@ -89,14 +107,16 @@ class SystemSchemaManagerTest {
     }
     
     @Test
-    void assertIsSystemTableWithDatabaseTypeAndNullSchema() {
+    void assertIsSystemTableWithDatabaseTypeAndNullSchema() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         assertTrue(SystemSchemaManager.isSystemTable("MySQL", null, "columns"));
         assertTrue(SystemSchemaManager.isSystemTable("PostgreSQL", null, "pg_database"));
         assertFalse(SystemSchemaManager.isSystemTable("MySQL", null, "foo_tbl"));
     }
     
     @Test
-    void assertIsSystemTableWithDatabaseTypeAndSchema() {
+    void assertIsSystemTableWithDatabaseTypeAndSchema() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         assertTrue(SystemSchemaManager.isSystemTable("MySQL", "information_schema", "columns"));
         assertTrue(SystemSchemaManager.isSystemTable("PostgreSQL", "pg_catalog", "pg_database"));
         assertTrue(SystemSchemaManager.isSystemTable("MySQL", "shardingsphere", "cluster_information"));
@@ -105,7 +125,8 @@ class SystemSchemaManagerTest {
     }
     
     @Test
-    void assertIsSystemTableWithTableNames() {
+    void assertIsSystemTableWithTableNames() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         assertTrue(SystemSchemaManager.isSystemTable("MySQL", "information_schema", Arrays.asList("columns", "tables", "schemata")));
         assertFalse(SystemSchemaManager.isSystemTable("MySQL", "information_schema", Arrays.asList("columns", "nonexistent_table")));
         assertTrue(SystemSchemaManager.isSystemTable("PostgreSQL", "pg_catalog", Arrays.asList("pg_database", "pg_tables")));
@@ -114,11 +135,57 @@ class SystemSchemaManagerTest {
     }
     
     @Test
-    void assertGetAllInputStreams() {
-        java.util.Collection<java.io.InputStream> actual = SystemSchemaManager.getAllInputStreams("MySQL", "information_schema");
-        assertThat(actual.size(), is(95));
+    void assertGetAllInputStreams() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
+        java.util.Collection<java.io.InputStream> actual = SystemSchemaManager.getAllInputStreams("MySQL", "information_schema", true);
+        assertThat(actual.size(), is(3));
         for (InputStream each : actual) {
             assertNotNull(each);
         }
+    }
+    
+    private void setUpMySQLSystemSchemaDataSource() throws SQLException {
+        GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
+        Connection connection = mock(Connection.class);
+        MockedDataSource dataSource = new MockedDataSource(connection);
+        Map<String, Collection<String>> schemaTables = new LinkedHashMap<>();
+        schemaTables.put("information_schema", Arrays.asList("columns", "tables", "schemata"));
+        schemaTables.put("mysql", Collections.singletonList("db"));
+        schemaTables.put("performance_schema", Collections.singletonList("events_waits_current"));
+        schemaTables.put("sys", Collections.singletonList("sys_config"));
+        AtomicReference<String> schemaNameRef = new AtomicReference<>();
+        PreparedStatement tableStatement = mock(PreparedStatement.class);
+        PreparedStatement typeStatement = mock(PreparedStatement.class);
+        when(connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?")).thenReturn(tableStatement);
+        when(connection.prepareStatement("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?")).thenReturn(typeStatement);
+        doAnswer(invocation -> {
+            schemaNameRef.set(invocation.getArgument(1, String.class));
+            return null;
+        }).when(tableStatement).setString(eq(1), anyString());
+        when(tableStatement.executeQuery()).thenAnswer(invocation -> buildTableResultSet(schemaTables.getOrDefault(schemaNameRef.get(), Collections.emptyList())));
+        when(typeStatement.executeQuery()).thenAnswer(invocation -> buildTableTypeResultSet());
+        GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
+    }
+    
+    private ResultSet buildTableResultSet(final Collection<String> tableNames) throws SQLException {
+        ResultSet result = mock(ResultSet.class);
+        Collection<String> names = new ArrayList<>(tableNames);
+        AtomicReference<String> current = new AtomicReference<>();
+        when(result.next()).thenAnswer(invocation -> {
+            if (names.isEmpty()) {
+                return false;
+            }
+            current.set(names.remove(0));
+            return true;
+        });
+        when(result.getString("TABLE_NAME")).thenAnswer(invocation -> current.get());
+        return result;
+    }
+    
+    private ResultSet buildTableTypeResultSet() throws SQLException {
+        ResultSet result = mock(ResultSet.class);
+        when(result.next()).thenReturn(true, false);
+        when(result.getString("TABLE_TYPE")).thenReturn("BASE TABLE");
+        return result;
     }
 }

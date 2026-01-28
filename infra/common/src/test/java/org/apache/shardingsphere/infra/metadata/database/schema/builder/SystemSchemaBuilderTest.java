@@ -17,6 +17,7 @@
 
 package org.apache.shardingsphere.infra.metadata.database.schema.builder;
 
+import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.config.props.temporary.TemporaryConfigurationPropertyKey;
@@ -24,8 +25,13 @@ import org.apache.shardingsphere.infra.metadata.database.schema.model.ShardingSp
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.infra.util.props.PropertiesBuilder;
 import org.apache.shardingsphere.infra.util.props.PropertiesBuilder.Property;
+import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.junit.jupiter.api.Test;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.Properties;
 
@@ -33,29 +39,32 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SystemSchemaBuilderTest {
     
     @Test
-    void assertBuildForMySQL() {
+    void assertBuildForMySQL() throws SQLException {
+        setUpMySQLSystemSchemaDataSource();
         DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, "MySQL");
         ConfigurationProperties configProps = new ConfigurationProperties(PropertiesBuilder.build());
         Map<String, ShardingSphereSchema> actualInformationSchema = SystemSchemaBuilder.build("information_schema", databaseType, configProps);
         assertThat(actualInformationSchema.size(), is(1));
         assertTrue(actualInformationSchema.containsKey("information_schema"));
-        assertThat(actualInformationSchema.get("information_schema").getAllTables().size(), is(95));
+        assertThat(actualInformationSchema.get("information_schema").getAllTables().size(), is(3));
         Map<String, ShardingSphereSchema> actualMySQLSchema = SystemSchemaBuilder.build("mysql", databaseType, configProps);
         assertThat(actualMySQLSchema.size(), is(1));
         assertTrue(actualMySQLSchema.containsKey("mysql"));
-        assertThat(actualMySQLSchema.get("mysql").getAllTables().size(), is(40));
+        assertThat(actualMySQLSchema.get("mysql").getAllTables().size(), is(1));
         Map<String, ShardingSphereSchema> actualPerformanceSchema = SystemSchemaBuilder.build("performance_schema", databaseType, configProps);
         assertThat(actualPerformanceSchema.size(), is(1));
         assertTrue(actualPerformanceSchema.containsKey("performance_schema"));
-        assertThat(actualPerformanceSchema.get("performance_schema").getAllTables().size(), is(114));
+        assertThat(actualPerformanceSchema.get("performance_schema").getAllTables().size(), is(1));
         Map<String, ShardingSphereSchema> actualSysSchema = SystemSchemaBuilder.build("sys", databaseType, configProps);
         assertThat(actualSysSchema.size(), is(1));
         assertTrue(actualSysSchema.containsKey("sys"));
-        assertThat(actualSysSchema.get("sys").getAllTables().size(), is(53));
+        assertThat(actualSysSchema.get("sys").getAllTables().size(), is(1));
     }
     
     @Test
@@ -103,5 +112,24 @@ class SystemSchemaBuilderTest {
         ShardingSphereSchema shardingsphereSchema = actual.get("shardingsphere");
         assertThat(shardingsphereSchema.getAllTables().size(), is(1));
         assertTrue(shardingsphereSchema.containsTable("cluster_information"));
+    }
+    
+    private void setUpMySQLSystemSchemaDataSource() throws SQLException {
+        GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
+        Connection connection = mock(Connection.class);
+        MockedDataSource dataSource = new MockedDataSource(connection);
+        PreparedStatement tableStatement = mock(PreparedStatement.class);
+        PreparedStatement typeStatement = mock(PreparedStatement.class);
+        ResultSet tableResultSet = mock(ResultSet.class);
+        ResultSet typeResultSet = mock(ResultSet.class);
+        when(tableResultSet.next()).thenReturn(true, true, true, false);
+        when(tableResultSet.getString("TABLE_NAME")).thenReturn("columns", "tables", "schemata");
+        when(typeResultSet.next()).thenReturn(true, false);
+        when(typeResultSet.getString("TABLE_TYPE")).thenReturn("BASE TABLE");
+        when(tableStatement.executeQuery()).thenReturn(tableResultSet);
+        when(typeStatement.executeQuery()).thenReturn(typeResultSet);
+        when(connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?")).thenReturn(tableStatement);
+        when(connection.prepareStatement("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?")).thenReturn(typeStatement);
+        GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
     }
 }
