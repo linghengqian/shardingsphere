@@ -140,20 +140,12 @@ class MySQLSystemSchemaQueryExecutorFactoryTest {
         Connection connection = mock(Connection.class);
         MockedDataSource dataSource = new MockedDataSource(connection);
         PreparedStatement tableStatement = mock(PreparedStatement.class);
-        PreparedStatement typeStatement = mock(PreparedStatement.class);
         ResultSet tableResultSet = mock(ResultSet.class);
-        ResultSet typeResultSet = mock(ResultSet.class);
         when(tableResultSet.next()).thenReturn(true, false);
         when(tableResultSet.getString("TABLE_NAME")).thenReturn(tableName);
-        when(typeResultSet.next()).thenReturn(true, false);
-        when(typeResultSet.getString("TABLE_TYPE")).thenReturn("BASE TABLE");
         when(connection.prepareStatement("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?")).thenReturn(tableStatement);
-        when(connection.prepareStatement("SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?")).thenReturn(typeStatement);
         doNothing().when(tableStatement).setString(eq(1), anyString());
-        doNothing().when(typeStatement).setString(eq(1), anyString());
-        doNothing().when(typeStatement).setString(eq(2), anyString());
         when(tableStatement.executeQuery()).thenReturn(tableResultSet);
-        when(typeStatement.executeQuery()).thenReturn(typeResultSet);
         GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
     }
 }
