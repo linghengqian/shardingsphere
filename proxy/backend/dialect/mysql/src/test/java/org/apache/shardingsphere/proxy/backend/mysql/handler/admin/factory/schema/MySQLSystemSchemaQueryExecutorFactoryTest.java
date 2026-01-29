@@ -134,7 +134,7 @@ class MySQLSystemSchemaQueryExecutorFactoryTest {
         assertTrue(actual.isPresent());
         assertThat(actual.get(), isA(DatabaseMetaDataExecutor.class));
     }
-
+    
     private void setUpMySQLSystemSchemaDataSource(final String schemaName, final String tableName) throws SQLException {
         GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
         Connection connection = mock(Connection.class);

@@ -18,7 +18,6 @@
 package org.apache.shardingsphere.proxy.backend.mysql.handler.admin;
 
 import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
-import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.binder.context.statement.SQLStatementContext;
 import org.apache.shardingsphere.infra.binder.context.statement.type.CommonSQLStatementContext;
@@ -69,7 +68,6 @@ import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.function.My
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.procedure.MySQLShowProcedureStatusStatement;
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.process.MySQLShowProcessListStatement;
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.table.MySQLShowTablesStatement;
-import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.apache.shardingsphere.test.infra.framework.extension.mock.AutoMockExtension;
 import org.apache.shardingsphere.test.infra.framework.extension.mock.StaticMockSettings;
 import org.junit.jupiter.api.Test;
@@ -340,7 +338,7 @@ class MySQLAdminExecutorCreatorTest {
         assertTrue(actual.isPresent());
         assertThat(actual.get(), isA(DatabaseMetaDataExecutor.class));
     }
-
+    
     private void setUpMySQLSystemSchemaDataSource(final String schemaName, final String tableName) throws SQLException {
         GlobalDataSourceRegistry.getInstance().getCachedDataSources().clear();
         Connection connection = mock(Connection.class);

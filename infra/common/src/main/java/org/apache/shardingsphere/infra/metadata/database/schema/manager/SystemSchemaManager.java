@@ -22,7 +22,6 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
-import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
 import org.apache.shardingsphere.database.connector.core.metadata.database.system.SystemDatabase;
 import org.apache.shardingsphere.database.connector.core.metadata.database.schema.SystemSchemaProvider;
 import org.apache.shardingsphere.database.connector.core.spi.DatabaseTypedSPILoader;
@@ -171,12 +170,11 @@ public final class SystemSchemaManager {
         }
         return getAllInputStreams(databaseType, schema);
     }
-
+    
     private static DialectSystemSchemaManager getDialectSystemSchemaManager(final String databaseType) {
         return DATABASE_TYPE_AND_SYSTEM_SCHEMA_MANAGER_MAP.getOrDefault(databaseType, new DialectSystemSchemaManager());
     }
     
-
     private static boolean isSystemTableWithNullSchema(final String databaseTypeName, final String tableName) {
         DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, databaseTypeName);
         SystemDatabase systemDatabase = new SystemDatabase(databaseType);

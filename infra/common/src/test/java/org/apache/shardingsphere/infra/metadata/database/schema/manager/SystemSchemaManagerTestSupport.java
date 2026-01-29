@@ -50,6 +50,13 @@ public final class SystemSchemaManagerTestSupport {
     private SystemSchemaManagerTestSupport() {
     }
     
+    /**
+     * Set up MySQL system schema data source.
+     *
+     * @param schemaName schema name
+     * @param tableNames table names
+     * @throws SQLException SQL exception
+     */
     public static void setUpMySQLSystemSchemaDataSource(final String schemaName, final Collection<String> tableNames) throws SQLException {
         if (null == DATA_SOURCE_REF.get()) {
             initMySQLSystemSchemaDataSource();
@@ -57,6 +64,13 @@ public final class SystemSchemaManagerTestSupport {
         SCHEMA_TABLES.put(schemaName, tableNames);
     }
     
+    /**
+     * Build table result set.
+     *
+     * @param tableNames table names
+     * @return table result set
+     * @throws SQLException SQL exception
+     */
     public static ResultSet buildTableResultSet(final Collection<String> tableNames) throws SQLException {
         ResultSet result = mock(ResultSet.class);
         List<String> names = new ArrayList<>(tableNames);

@@ -46,7 +46,7 @@ class MySQLKernelSupportedSystemTableTest {
         assertThat(actual.keySet().iterator().next(), is("sys"));
         assertThat(actual.get("sys"), hasItem("sys_config"));
     }
-
+    
     @Test
     void assertSystemSchemaProviderType() {
         assertThat(systemSchemaProvider.getDatabaseType(), is("MySQL"));

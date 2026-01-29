@@ -127,7 +127,7 @@ class SystemSchemaManagerTest {
         assertThat(actual.size(), is(3));
         assertTrue(actual.stream().allMatch(SystemSchemaManagerTest::isInputStreamReadable));
     }
-
+    
     private static boolean isInputStreamReadable(final InputStream inputStream) {
         if (null == inputStream) {
             return false;
