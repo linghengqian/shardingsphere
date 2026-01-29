@@ -25,6 +25,7 @@ import org.apache.shardingsphere.database.connector.core.metadata.database.schem
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +33,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
+import javax.sql.DataSource;
 
 /**
  * MySQL system schema provider.
@@ -52,11 +54,11 @@ public final class MySQLSystemSchemaProvider implements SystemSchemaProvider {
         if (null == schemaName) {
             return Optional.empty();
         }
-        Map<String, javax.sql.DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
+        Map<String, DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
         if (cachedDataSources.isEmpty()) {
             return Optional.empty();
         }
-        javax.sql.DataSource dataSource = cachedDataSources.values().iterator().next();
+        DataSource dataSource = cachedDataSources.values().iterator().next();
         return loadSystemTableNames(schemaName, dataSource);
     }
     
@@ -65,11 +67,11 @@ public final class MySQLSystemSchemaProvider implements SystemSchemaProvider {
         if (null == schemaName) {
             return Optional.empty();
         }
-        Map<String, javax.sql.DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
+        Map<String, DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
         if (cachedDataSources.isEmpty()) {
             return Optional.empty();
         }
-        javax.sql.DataSource dataSource = cachedDataSources.values().iterator().next();
+        DataSource dataSource = cachedDataSources.values().iterator().next();
         Optional<Collection<String>> tableNames = loadSystemTableNames(schemaName, dataSource);
         if (!tableNames.isPresent()) {
             return Optional.empty();
@@ -87,10 +89,10 @@ public final class MySQLSystemSchemaProvider implements SystemSchemaProvider {
         return "MySQL";
     }
     
-    private Optional<Collection<String>> loadSystemTableNames(final String schemaName, final javax.sql.DataSource dataSource) {
+    private Optional<Collection<String>> loadSystemTableNames(final String schemaName, final DataSource dataSource) {
         Collection<String> result = new CaseInsensitiveSet<>();
         try (
-                java.sql.Connection connection = dataSource.getConnection();
+                Connection connection = dataSource.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(SYSTEM_TABLE_SQL)) {
             preparedStatement.setString(1, schemaName);
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
@@ -105,9 +107,9 @@ public final class MySQLSystemSchemaProvider implements SystemSchemaProvider {
         return result.isEmpty() ? Optional.empty() : Optional.of(result);
     }
     
-    private String loadTableType(final String schemaName, final String tableName, final javax.sql.DataSource dataSource) {
+    private String loadTableType(final String schemaName, final String tableName, final DataSource dataSource) {
         try (
-                java.sql.Connection connection = dataSource.getConnection();
+                Connection connection = dataSource.getConnection();
                 PreparedStatement preparedStatement = connection.prepareStatement(TABLE_TYPE_SQL)) {
             preparedStatement.setString(1, schemaName);
             preparedStatement.setString(2, tableName);
