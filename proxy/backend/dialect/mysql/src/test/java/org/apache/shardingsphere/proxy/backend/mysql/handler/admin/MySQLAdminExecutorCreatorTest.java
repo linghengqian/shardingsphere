@@ -68,6 +68,7 @@ import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.function.My
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.procedure.MySQLShowProcedureStatusStatement;
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.process.MySQLShowProcessListStatement;
 import org.apache.shardingsphere.sql.parser.statement.mysql.dal.show.table.MySQLShowTablesStatement;
+import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.apache.shardingsphere.test.infra.framework.extension.mock.AutoMockExtension;
 import org.apache.shardingsphere.test.infra.framework.extension.mock.StaticMockSettings;
 import org.junit.jupiter.api.Test;
