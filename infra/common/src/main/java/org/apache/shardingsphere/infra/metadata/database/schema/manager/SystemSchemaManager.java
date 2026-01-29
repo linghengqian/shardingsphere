@@ -249,7 +249,7 @@ public final class SystemSchemaManager {
                 }
             }
         } catch (final SQLException ex) {
-            log.warn("Load MySQL system tables failed for schema {}", schemaName, ex);
+            log.debug("Load MySQL system tables failed for schema {}", schemaName, ex);
             return Optional.empty();
         }
         return Optional.of(result);
@@ -267,7 +267,7 @@ public final class SystemSchemaManager {
                 }
             }
         } catch (final SQLException ex) {
-            log.warn("Load MySQL system table type failed for {}.{}", schemaName, tableName, ex);
+            log.debug("Load MySQL system table type failed for {}.{}", schemaName, tableName, ex);
         }
         return "TABLE";
     }
