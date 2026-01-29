@@ -18,23 +18,19 @@
 package org.apache.shardingsphere.infra.metadata.database.schema.manager;
 
 import com.cedarsoftware.util.CaseInsensitiveMap;
-import com.cedarsoftware.util.CaseInsensitiveSet;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.Strings;
 import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
 import org.apache.shardingsphere.database.connector.core.metadata.database.system.SystemDatabase;
+import org.apache.shardingsphere.database.connector.core.metadata.database.schema.SystemSchemaProvider;
+import org.apache.shardingsphere.database.connector.core.spi.DatabaseTypedSPILoader;
 import org.apache.shardingsphere.database.connector.core.type.DatabaseType;
 import org.apache.shardingsphere.infra.spi.type.typed.TypedSPILoader;
 import org.apache.shardingsphere.infra.util.directory.ClasspathResourceDirectoryReader;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -54,16 +50,6 @@ public final class SystemSchemaManager {
     private static final Map<String, DialectSystemSchemaManager> DATABASE_TYPE_AND_SYSTEM_SCHEMA_MANAGER_MAP;
     
     private static final String COMMON = "common";
-    
-    private static final String MYSQL_DATABASE_TYPE = "MySQL";
-    
-    private static final String MYSQL_SYSTEM_TABLE_SQL = "SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA=?";
-    
-    private static final String MYSQL_TABLE_TYPE_SQL = "SELECT TABLE_TYPE FROM information_schema.TABLES WHERE TABLE_SCHEMA=? AND TABLE_NAME=?";
-    
-    private static final String MYSQL_TABLE_TYPE_VIEW = "VIEW";
-    
-    private static final String MYSQL_YAML_TABLE_TEMPLATE = "name: %s%s%stype: %s%scolumns: {}%s";
     
     static {
         List<String> resourceNames;
@@ -94,7 +80,7 @@ public final class SystemSchemaManager {
      */
     public static boolean isSystemTable(final String schema, final String tableName) {
         return DATABASE_TYPE_AND_SYSTEM_SCHEMA_MANAGER_MAP.entrySet().stream().anyMatch(entry -> entry.getValue().getTables(schema).contains(tableName))
-                || loadMySQLSystemTableNames(schema).contains(tableName);
+                || loadSystemTableNames(schema).contains(tableName);
     }
     
     /**
@@ -106,11 +92,12 @@ public final class SystemSchemaManager {
      * @return is system table or not
      */
     public static boolean isSystemTable(final String databaseType, final String schema, final String tableName) {
-        if (isMySQLDatabaseType(databaseType)) {
-            if (null == schema) {
-                return isMySQLSystemTableWithNullSchema(tableName);
-            }
-            return loadMySQLSystemTableNames(schema).contains(tableName) || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableName);
+        if (null == schema) {
+            return isSystemTableWithNullSchema(databaseType, tableName);
+        }
+        Collection<String> systemTableNames = loadSystemTableNames(databaseType, schema);
+        if (!systemTableNames.isEmpty()) {
+            return systemTableNames.contains(tableName) || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableName);
         }
         return getDialectSystemSchemaManager(databaseType).isSystemTable(schema, tableName)
                 || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableName);
@@ -125,8 +112,9 @@ public final class SystemSchemaManager {
      * @return is system table or not
      */
     public static boolean isSystemTable(final String databaseType, final String schema, final Collection<String> tableNames) {
-        if (isMySQLDatabaseType(databaseType)) {
-            return loadMySQLSystemTableNames(schema).containsAll(tableNames) || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableNames);
+        Collection<String> systemTableNames = loadSystemTableNames(databaseType, schema);
+        if (!systemTableNames.isEmpty()) {
+            return systemTableNames.containsAll(tableNames) || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableNames);
         }
         return getDialectSystemSchemaManager(databaseType).isSystemTable(schema, tableNames)
                 || getDialectSystemSchemaManager(COMMON).isSystemTable(schema, tableNames);
@@ -141,8 +129,9 @@ public final class SystemSchemaManager {
      */
     public static Collection<String> getTables(final String databaseType, final String schema) {
         Collection<String> result = new LinkedList<>();
-        if (isMySQLDatabaseType(databaseType)) {
-            result.addAll(loadMySQLSystemTableNames(schema));
+        Collection<String> systemTableNames = loadSystemTableNames(databaseType, schema);
+        if (!systemTableNames.isEmpty()) {
+            result.addAll(systemTableNames);
         } else {
             result.addAll(getDialectSystemSchemaManager(databaseType).getTables(schema));
         }
@@ -176,103 +165,65 @@ public final class SystemSchemaManager {
         if (!systemSchemaMetadataEnabled) {
             return getAllInputStreams(databaseType, schema);
         }
-        if (isMySQLDatabaseType(databaseType)) {
-            Optional<Collection<InputStream>> liveSchema = loadMySQLSystemTableInputStreams(schema);
-            if (liveSchema.isPresent()) {
-                return liveSchema.get();
-            }
+        Optional<Collection<InputStream>> liveSchema = loadSystemTableInputStreams(databaseType, schema);
+        if (liveSchema.isPresent()) {
+            return liveSchema.get();
         }
         return getAllInputStreams(databaseType, schema);
     }
-    
-    private static boolean isMySQLSystemTableWithNullSchema(final String tableName) {
-        DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, MYSQL_DATABASE_TYPE);
-        SystemDatabase systemDatabase = new SystemDatabase(databaseType);
-        for (String schemaName : systemDatabase.getSystemSchemas()) {
-            if (loadMySQLSystemTableNames(schemaName).contains(tableName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    private static boolean isMySQLDatabaseType(final String databaseType) {
-        return MYSQL_DATABASE_TYPE.equalsIgnoreCase(databaseType);
-    }
-    
+
     private static DialectSystemSchemaManager getDialectSystemSchemaManager(final String databaseType) {
         return DATABASE_TYPE_AND_SYSTEM_SCHEMA_MANAGER_MAP.getOrDefault(databaseType, new DialectSystemSchemaManager());
     }
     
-    private static Collection<String> loadMySQLSystemTableNames(final String schemaName) {
+
+    private static boolean isSystemTableWithNullSchema(final String databaseTypeName, final String tableName) {
+        DatabaseType databaseType = TypedSPILoader.getService(DatabaseType.class, databaseTypeName);
+        SystemDatabase systemDatabase = new SystemDatabase(databaseType);
+        for (String schemaName : systemDatabase.getSystemSchemas()) {
+            if (loadSystemTableNames(databaseTypeName, schemaName).contains(tableName)) {
+                return true;
+            }
+        }
+        return getDialectSystemSchemaManager(databaseTypeName).isSystemTable(null, tableName)
+                || getDialectSystemSchemaManager(COMMON).isSystemTable(null, tableName);
+    }
+    
+    private static Collection<String> loadSystemTableNames(final String schemaName) {
         if (null == schemaName) {
             return Collections.emptyList();
         }
-        Map<String, javax.sql.DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
-        if (cachedDataSources.isEmpty()) {
-            return Collections.emptyList();
+        for (DialectSystemSchemaManager each : DATABASE_TYPE_AND_SYSTEM_SCHEMA_MANAGER_MAP.values()) {
+            Collection<String> tables = each.getTables(schemaName);
+            if (!tables.isEmpty()) {
+                return tables;
+            }
         }
-        javax.sql.DataSource dataSource = cachedDataSources.values().iterator().next();
-        return loadMySQLSystemTableNames(schemaName, dataSource).orElseGet(Collections::emptyList);
+        return Collections.emptyList();
     }
     
-    private static Optional<Collection<InputStream>> loadMySQLSystemTableInputStreams(final String schemaName) {
+    private static Collection<String> loadSystemTableNames(final String databaseType, final String schemaName) {
+        if (null == schemaName) {
+            return Collections.emptyList();
+        }
+        Optional<SystemSchemaProvider> provider = findSystemSchemaProvider(databaseType);
+        if (!provider.isPresent()) {
+            return Collections.emptyList();
+        }
+        Optional<Collection<String>> systemTables = provider.get().getSystemTables(schemaName);
+        return systemTables.isPresent() ? systemTables.get() : Collections.emptyList();
+    }
+    
+    private static Optional<Collection<InputStream>> loadSystemTableInputStreams(final String databaseType, final String schemaName) {
         if (null == schemaName) {
             return Optional.empty();
         }
-        Map<String, javax.sql.DataSource> cachedDataSources = GlobalDataSourceRegistry.getInstance().getCachedDataSources();
-        if (cachedDataSources.isEmpty()) {
-            return Optional.empty();
-        }
-        javax.sql.DataSource dataSource = cachedDataSources.values().iterator().next();
-        Optional<Collection<String>> tableNames = loadMySQLSystemTableNames(schemaName, dataSource);
-        if (!tableNames.isPresent()) {
-            return Optional.empty();
-        }
-        Collection<InputStream> result = new LinkedList<>();
-        for (String tableName : tableNames.get()) {
-            String tableType = loadMySQLTableType(schemaName, tableName, dataSource);
-            result.add(new ByteArrayInputStream(buildMySQLTableYaml(tableName, tableType).getBytes(StandardCharsets.UTF_8)));
-        }
-        return Optional.of(result);
+        Optional<SystemSchemaProvider> provider = findSystemSchemaProvider(databaseType);
+        return provider.isPresent() ? provider.get().getSystemSchemaInputStreams(schemaName) : Optional.empty();
     }
     
-    private static Optional<Collection<String>> loadMySQLSystemTableNames(final String schemaName, final javax.sql.DataSource dataSource) {
-        Collection<String> result = new CaseInsensitiveSet<>();
-        try (
-                java.sql.Connection connection = dataSource.getConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(MYSQL_SYSTEM_TABLE_SQL)) {
-            preparedStatement.setString(1, schemaName);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    result.add(resultSet.getString("TABLE_NAME"));
-                }
-            }
-        } catch (final SQLException ex) {
-            log.debug("Load MySQL system tables failed for schema {}", schemaName, ex);
-            return Optional.empty();
-        }
-        return Optional.of(result);
-    }
-    
-    private static String loadMySQLTableType(final String schemaName, final String tableName, final javax.sql.DataSource dataSource) {
-        try (
-                java.sql.Connection connection = dataSource.getConnection();
-                PreparedStatement preparedStatement = connection.prepareStatement(MYSQL_TABLE_TYPE_SQL)) {
-            preparedStatement.setString(1, schemaName);
-            preparedStatement.setString(2, tableName);
-            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    return MYSQL_TABLE_TYPE_VIEW.equalsIgnoreCase(resultSet.getString("TABLE_TYPE")) ? "VIEW" : "TABLE";
-                }
-            }
-        } catch (final SQLException ex) {
-            log.debug("Load MySQL system table type failed for {}.{}", schemaName, tableName, ex);
-        }
-        return "TABLE";
-    }
-    
-    private static String buildMySQLTableYaml(final String tableName, final String tableType) {
-        return String.format(MYSQL_YAML_TABLE_TEMPLATE, tableName, System.lineSeparator(), System.lineSeparator(), tableType, System.lineSeparator(), System.lineSeparator());
+    private static Optional<SystemSchemaProvider> findSystemSchemaProvider(final String databaseType) {
+        DatabaseType type = TypedSPILoader.getService(DatabaseType.class, databaseType);
+        return DatabaseTypedSPILoader.findService(SystemSchemaProvider.class, type);
     }
 }

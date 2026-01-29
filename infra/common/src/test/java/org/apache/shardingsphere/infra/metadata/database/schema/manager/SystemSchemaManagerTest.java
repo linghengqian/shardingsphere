@@ -17,27 +17,19 @@
 
 package org.apache.shardingsphere.infra.metadata.database.schema.manager;
 
-import org.apache.shardingsphere.database.connector.core.GlobalDataSourceRegistry;
-import org.apache.shardingsphere.test.infra.fixture.jdbc.MockedDataSource;
 import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class SystemSchemaManagerTest {
     
@@ -131,10 +123,19 @@ class SystemSchemaManagerTest {
     @Test
     void assertGetAllInputStreams() throws SQLException {
         setUpMySQLSystemSchemaDataSource();
-        java.util.Collection<java.io.InputStream> actual = SystemSchemaManager.getAllInputStreams("MySQL", "information_schema", true);
+        Collection<InputStream> actual = SystemSchemaManager.getAllInputStreams("MySQL", "information_schema", true);
         assertThat(actual.size(), is(3));
-        for (InputStream each : actual) {
-            assertNotNull(each);
+        assertTrue(actual.stream().allMatch(SystemSchemaManagerTest::isInputStreamReadable));
+    }
+
+    private static boolean isInputStreamReadable(final InputStream inputStream) {
+        if (null == inputStream) {
+            return false;
+        }
+        try {
+            return 0 <= inputStream.read();
+        } catch (final IOException ex) {
+            return false;
         }
     }
     
@@ -145,14 +146,4 @@ class SystemSchemaManagerTest {
         SystemSchemaManagerTestSupport.setUpMySQLSystemSchemaDataSource("sys", Collections.singletonList("sys_config"));
     }
     
-    private ResultSet buildTableResultSet(final Collection<String> tableNames) throws SQLException {
-        return SystemSchemaManagerTestSupport.buildTableResultSet(tableNames);
-    }
-    
-    private ResultSet buildTableTypeResultSet() throws SQLException {
-        ResultSet result = mock(ResultSet.class);
-        when(result.next()).thenReturn(true, false);
-        when(result.getString("TABLE_TYPE")).thenReturn("BASE TABLE");
-        return result;
-    }
 }

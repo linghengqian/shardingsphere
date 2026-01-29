@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -45,10 +46,6 @@ public final class SystemSchemaManagerTestSupport {
     private static final AtomicReference<String> SCHEMA_NAME_REF = new AtomicReference<>();
     
     private static final AtomicReference<MockedDataSource> DATA_SOURCE_REF = new AtomicReference<>();
-    
-    private static final AtomicReference<PreparedStatement> TABLE_STATEMENT_REF = new AtomicReference<>();
-    
-    private static final AtomicReference<PreparedStatement> TYPE_STATEMENT_REF = new AtomicReference<>();
     
     private SystemSchemaManagerTestSupport() {
     }
@@ -94,11 +91,11 @@ public final class SystemSchemaManagerTestSupport {
             SCHEMA_NAME_REF.set(invocation.getArgument(1, String.class));
             return null;
         }).when(tableStatement).setString(eq(1), anyString());
+        doNothing().when(typeStatement).setString(eq(1), anyString());
+        doNothing().when(typeStatement).setString(eq(2), anyString());
         when(tableStatement.executeQuery()).thenAnswer(invocation -> buildTableResultSet(SCHEMA_TABLES.getOrDefault(SCHEMA_NAME_REF.get(), Collections.emptyList())));
         when(typeStatement.executeQuery()).thenAnswer(invocation -> buildTableTypeResultSet());
         GlobalDataSourceRegistry.getInstance().getCachedDataSources().put("mysql", dataSource);
         DATA_SOURCE_REF.set(dataSource);
-        TABLE_STATEMENT_REF.set(tableStatement);
-        TYPE_STATEMENT_REF.set(typeStatement);
     }
 }
