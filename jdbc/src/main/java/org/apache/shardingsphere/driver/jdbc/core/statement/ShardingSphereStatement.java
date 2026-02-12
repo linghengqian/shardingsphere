@@ -314,10 +314,14 @@ public final class ShardingSphereStatement extends AbstractStatementAdapter {
     
     private SQLStatement parseSql(final String originSQL) throws SQLException {
         ShardingSpherePreconditions.checkNotEmpty(originSQL, () -> new EmptySQLException().toSQLException());
-        String sql = SQLHintUtils.removeHint(originSQL);
+        processedSql = SQLHintUtils.removeHint(originSQL);
         ShardingSphereDatabase currentDatabase = metaData.getDatabase(usedDatabaseName);
         DatabaseType databaseType = currentDatabase.getProtocolType();
-        SQLStatement sqlStatement = metaData.getGlobalRuleMetaData().getSingleRule(SQLParserRule.class).getSQLParserEngine(databaseType).parse(sql, false);
+        return metaData.getGlobalRuleMetaData().getSingleRule(SQLParserRule.class).getSQLParserEngine(databaseType).parse(processedSql, false);
+    }
+    
+    private QueryContext createQueryContext(final SQLStatement sqlStatement, final String originSQL) {
+        HintValueContext hintValueContext = SQLHintUtils.extractHint(originSQL);
         SQLStatementContext sqlStatementContext = new SQLBindEngine(metaData, connection.getCurrentDatabaseName(), hintValueContext).bind(sqlStatement);
         return new QueryContext(sqlStatementContext, processedSql, Collections.emptyList(), hintValueContext, connection.getDatabaseConnectionManager().getConnectionContext(), metaData);
     }
