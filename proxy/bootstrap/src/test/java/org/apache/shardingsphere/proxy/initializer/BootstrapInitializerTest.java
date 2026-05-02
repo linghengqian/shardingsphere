@@ -28,6 +28,7 @@ import org.apache.shardingsphere.mode.manager.builder.ContextManagerBuilderParam
 import org.apache.shardingsphere.proxy.backend.config.YamlProxyConfiguration;
 import org.apache.shardingsphere.proxy.backend.config.yaml.YamlProxyDatabaseConfiguration;
 import org.apache.shardingsphere.proxy.backend.config.yaml.YamlProxyServerConfiguration;
+import org.apache.shardingsphere.proxy.backend.context.BackendExecutorContext;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.version.ShardingSphereProxyVersion;
 import org.apache.shardingsphere.test.infra.framework.extension.mock.AutoMockExtension;
@@ -56,7 +57,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(AutoMockExtension.class)
-@StaticMockSettings({ProxyContext.class, ShardingSphereProxyVersion.class})
+@StaticMockSettings({BackendExecutorContext.class, ProxyContext.class, ShardingSphereProxyVersion.class})
 class BootstrapInitializerTest {
     
     private final Map<Class<?>, Object> originalRegisteredServices = new HashMap<>(2, 1F);
@@ -90,6 +91,7 @@ class BootstrapInitializerTest {
         ArgumentCaptor<ContextManagerBuilderParameter> paramCaptor = ArgumentCaptor.forClass(ContextManagerBuilderParameter.class);
         verify(instanceMetaDataBuilder).build(3307, "");
         verify(contextManagerBuilder).build(paramCaptor.capture(), any(EventBusContext.class));
+        verify(BackendExecutorContext.getInstance()).init();
         ContextManagerBuilderParameter actualParameter = paramCaptor.getValue();
         ModeConfiguration actualModeConfig = actualParameter.getModeConfiguration();
         assertThat(actualModeConfig.getType(), is("Standalone"));
@@ -118,6 +120,7 @@ class BootstrapInitializerTest {
         ArgumentCaptor<ContextManagerBuilderParameter> paramCaptor = ArgumentCaptor.forClass(ContextManagerBuilderParameter.class);
         verify(instanceMetaDataBuilder).build(3307, "");
         verify(contextManagerBuilder).build(paramCaptor.capture(), any(EventBusContext.class));
+        verify(BackendExecutorContext.getInstance()).init();
         ContextManagerBuilderParameter actualParameter = paramCaptor.getValue();
         assertThat(actualParameter.getModeConfiguration().getType(), is("Cluster"));
         assertThat(actualParameter.getDatabaseConfigs().size(), is(1));
