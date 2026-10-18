@@ -32,5 +32,6 @@
         <module>absolutepath</module>
         <module>zookeeper</module>
         <module>etcd</module>
+        <module>scratch</module>
     </modules>
 </project>
